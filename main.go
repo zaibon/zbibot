@@ -1,19 +1,11 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/tls"
-	"fmt"
 	"github.com/Zaibon/ircbot"
-	"io"
-	"log"
-	"log"
-	"net"
-	"os"
+	// "time"
 )
 
 func main() {
-	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
 
 	b := ircbot.NewIrcBot()
 	b.Server = "irc.freenode.net"
