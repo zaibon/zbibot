@@ -1,13 +1,19 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/tls"
+	"fmt"
 	"github.com/Zaibon/ircbot"
+	"io"
 	"log"
-	// "time"
+	"log"
+	"net"
+	"os"
 )
 
 func main() {
-	log.SetPrefix("irc> ")
+	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
 
 	b := ircbot.NewIrcBot()
 	b.Server = "irc.freenode.net"
@@ -17,7 +23,7 @@ func main() {
 
 	b.Channel = append(b.Channel, "#testgigx")
 
-	b.Handlers["PONG"] = ircbot.Pong
+	b.Handlers["PING"] = ircbot.Pong
 	b.Handlers["JOIN"] = ircbot.Join
 	b.Handlers["PRIVMSG"] = ircbot.Respond
 
