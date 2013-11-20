@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ircbot"
+	"github.com/Zaibon/ircbot"
 	"log"
 	// "time"
 )
