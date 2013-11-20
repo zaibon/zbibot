@@ -54,6 +54,7 @@ func main() {
 	b.Handlers["PING"] = ircbot.Pong
 	b.Handlers["JOIN"] = ircbot.Join
 	b.Handlers["PRIVMSG"] = ircbot.Respond
+	b.Handlers["MODE"] = ircbot.ValidConnect
 
 	b.Connect()
 
