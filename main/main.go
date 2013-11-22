@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Zaibon/ircbot"
+	"github.com/Zaibon/zbibot"
 )
 
 type channels []string
@@ -36,33 +37,31 @@ func main() {
 
 	flag.Parse()
 
+	//create new bot
 	b := ircbot.NewIrcBot()
+
+	//configure bot
 	b.Server = flagServer
 	b.Port = flagPort
 	b.Encrypted = flagSsl
-	b.Nick = "ZbiBotTLS"
+	b.Nick = "ZbiBotTLS-Test"
 	b.User = b.Nick
-
 	if flag.NFlag() != 0 {
 		for i := 0; i < len(flagChannels); i++ {
 			b.Channel = append(b.Channel, flagChannels[i])
 		}
 	}
 
-	fmt.Println(b)
+	b.HandleWeb()
 
-	b.Handlers["PING"] = ircbot.Pong
-	b.Handlers["JOIN"] = ircbot.Join
-	b.Handlers["PRIVMSG"] = ircbot.Respond
-	b.Handlers["MODE"] = ircbot.ValidConnect
+	//set channels
+	b.AddAction("JOIN", zbibot.Greet)
+	b.AddAction("PRIVMSG", zbibot.Respond)
+	b.AddAction("JOIN", zbibot.FckBigx)
+	b.AddAction("PRIVMSG", zbibot.GoDock)
 
+	//connectin to server, listen and serve
 	b.Connect()
-
-	b.Listen()
-	b.HandleActionIn()
-	b.HandleActionOut()
-
-	b.Join()
 
 	//TODO handle signal system to throw something in b.Exit
 	<-b.Exit
