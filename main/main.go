@@ -23,6 +23,8 @@ var (
 	flagPort     string
 	flagSsl      bool
 	flagChannels channels
+
+	flagNick string
 )
 
 func init() {
@@ -30,6 +32,7 @@ func init() {
 	flag.StringVar(&flagPort, "port", "6697", "port")
 	flag.BoolVar(&flagSsl, "ssl", true, "true|false")
 
+	flag.StringVar(&flagNick, "nickname", "ZbiBot", "nickname")
 }
 
 func main() {
@@ -44,7 +47,7 @@ func main() {
 	b.Server = flagServer
 	b.Port = flagPort
 	b.Encrypted = flagSsl
-	b.Nick = "ZbiBotTLS-Test"
+	b.Nick = flagNick
 	b.User = b.Nick
 	if flag.NFlag() != 0 {
 		for i := 0; i < len(flagChannels); i++ {
