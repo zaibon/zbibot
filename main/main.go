@@ -25,14 +25,25 @@ var (
 	flagChannels channels
 
 	flagNick string
+
+	flagWebEnable bool
+	flagWebPort   string
 )
 
 func init() {
 	flag.StringVar(&flagServer, "server", "irc.freenode.net", "ip adresse of the server you want to connect to")
+	flag.StringVar(&flagServer, "s", "irc.freenode.net", "ip adresse of the server you want to connect to")
+
 	flag.StringVar(&flagPort, "port", "6697", "port")
+	flag.StringVar(&flagPort, "p", "6697", "port")
+
 	flag.BoolVar(&flagSsl, "ssl", true, "true|false")
 
-	flag.StringVar(&flagNick, "nickname", "ZbiBot", "nickname")
+	flag.StringVar(&flagNick, "nick", "ZbiBot", "nickname")
+	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
+
+	flag.BoolVar(&flagWebEnable, "web", false, "enable or not the web interface true|false")
+	flag.StringVar(&flagWebPort, "wport", "6697", "port on wich to bind web interface")
 }
 
 func main() {
@@ -54,8 +65,8 @@ func main() {
 			b.Channel = append(b.Channel, flagChannels[i])
 		}
 	}
-
-	b.HandleWeb()
+	b.Web = flagWebEnable
+	b.WebPort = flagWebPort
 
 	//set channels
 	b.AddAction("JOIN", zbibot.Greet)
