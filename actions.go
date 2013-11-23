@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Zaibon/ircbot"
 	"math/rand"
-
 	"strings"
 )
 
@@ -52,9 +51,9 @@ func Respond(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 }
 
-func Pong(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-
-}
+const (
+	gitlabUrl string = "gitlab.gigx.be/api/v3/projects/:id/repository/commits"
+)
 
 func GoDock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
