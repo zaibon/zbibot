@@ -65,7 +65,7 @@ func main() {
 			b.Channel = append(b.Channel, flagChannels[i])
 		}
 	}
-	b.Web = flagWebEnable
+	b.WebEnable = flagWebEnable
 	b.WebPort = flagWebPort
 
 	//set channels
