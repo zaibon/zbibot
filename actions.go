@@ -5,7 +5,19 @@ import (
 	"github.com/Zaibon/ircbot"
 	"math/rand"
 	"strings"
+	"time"
 )
+
+func KickAlex(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+	if m.Nick == "banzounet" {
+		time.Sleep(10 * time.Second)
+		b.Out <- &ircbot.IrcMsg{
+			Command: "KICK",
+			Channel: m.Channel,
+			Args:    []string{m.Nick},
+		}
+	}
+}
 
 func FckBigx(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	if m.Nick == "Bigx" {
