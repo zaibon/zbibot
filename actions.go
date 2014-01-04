@@ -68,11 +68,6 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		return
 	}
 
-	response := &ircbot.IrcMsg{
-		Command: "PRIVMSG",
-		Channel: m.Channel,
-	}
-
 	command := strings.TrimPrefix(m.Args[0], ":.")
 	switch command {
 	case "link":
