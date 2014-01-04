@@ -74,6 +74,7 @@ func main() {
 	b.AddAction("JOIN", zbibot.FckBigx)
 	b.AddAction("JOIN", zbibot.KickAlex)
 	b.AddAction("PRIVMSG", zbibot.GoDock)
+	b.AddAction("PRIVMSG", zbibot.Info)
 
 	//connectin to server, listen and serve
 	b.Connect()

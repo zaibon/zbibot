@@ -63,6 +63,36 @@ func Respond(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 }
 
+func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+	if !strings.HasPrefix(m.Args[0], ":.") {
+		return
+	}
+
+	response := &ircbot.IrcMsg{
+		Command: "PRIVMSG",
+		Channel: m.Channel,
+	}
+
+	command := strings.TrimPrefix(m.Args[0], ":.")
+	switch command {
+	case "link":
+		if len(m.Args) < 2 {
+			return
+		}
+		switch m.Args[1] {
+		case "stratum":
+			b.Say(m.Channel, "http://mining.bitcoin.cz/stratum-mining")
+		case "bter":
+			b.Say(m.Channel, "https://bter.com/")
+		}
+
+	case "pool":
+		b.Say(m.Channel, ":pool    : http://laminerie.eu")
+		b.Say(m.Channel, ":stratum : stratum+tcp://laminerieu.eu:3333")
+		b.Say(m.Channel, ":getwork : http://laminerie.eu:3335")
+	}
+}
+
 const (
 	gitlabUrl string = "gitlab.gigx.be/api/v3/projects/:id/repository/commits"
 )
