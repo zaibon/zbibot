@@ -73,7 +73,7 @@ func main() {
 	b.AddAction("JOIN", actions.Greet)
 	b.AddAction("PRIVMSG", actions.Respond)
 	b.AddAction("JOIN", actions.FckBigx)
-	b.AddAction("JOIN", actions.KickAlex)
+	// b.AddAction("JOIN", actions.KickAlex)
 	b.AddAction("PRIVMSG", actions.GoDock)
 	b.AddAction("PRIVMSG", actions.Info)
 
