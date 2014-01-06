@@ -7,16 +7,16 @@ import (
 )
 
 func TestLink(t *testing.T) {
-	f, err := os.Open("infoUrl.json")
+	f, err := os.Open("../infoUrl.json")
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	data := make(map[string]string)
+	data := make(map[string][]string)
 	dec := json.NewDecoder(f)
 	dec.Decode(&data)
 
-	if data["bter"] != "https://bter.com/" {
+	if data["bter"][0] != "https://bter.com/" {
 		t.Log(data)
 		t.Fail()
 	}
