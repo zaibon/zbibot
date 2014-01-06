@@ -76,7 +76,7 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		return
 	}
 	//unmarshall into map
-	links := make(map[string]string)
+	links := make(map[string][]string)
 	dec := json.NewDecoder(f)
 	dec.Decode(&links)
 
@@ -93,7 +93,9 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 			return
 		}
 
-		b.Say(m.Channel, links[m.Args[1]])
+		for _, v := range links[m.Args[1]] {
+			b.Say(m.Channel, v)
+		}
 	}
 }
 
