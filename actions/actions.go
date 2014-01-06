@@ -1,9 +1,11 @@
-package zbibot
+package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Zaibon/ircbot"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 )
@@ -68,25 +70,57 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		return
 	}
 
+	//read file that contains link
+	f, err := os.Open("infoUrl.json")
+	if err != nil {
+		return
+	}
+	//unmarshall into map
+	links := make(map[string]string)
+	dec := json.NewDecoder(f)
+	dec.Decode(&links)
+
+	//parse irc command
 	command := strings.TrimPrefix(m.Args[0], ":.")
 	switch command {
 	case "link":
 		if len(m.Args) < 2 {
+			//no link spécified
+			//display all available
+			for k, _ := range links {
+				b.Say(m.Channel, k)
+			}
 			return
 		}
-		switch m.Args[1] {
-		case "stratum":
-			b.Say(m.Channel, "http://mining.bitcoin.cz/stratum-mining")
-		case "bter":
-			b.Say(m.Channel, "https://bter.com/")
-		}
 
-	case "pool":
-		b.Say(m.Channel, ":pool    : http://laminerie.eu")
-		b.Say(m.Channel, ":stratum : stratum+tcp://laminerieu.eu:3333")
-		b.Say(m.Channel, ":getwork : http://laminerie.eu:3335")
+		b.Say(m.Channel, links[m.Args[1]])
 	}
 }
+
+// func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+// 	if !strings.HasPrefix(m.Args[0], ":.") {
+// 		return
+// 	}
+
+// 	command := strings.TrimPrefix(m.Args[0], ":.")
+// 	switch command {
+// 	case "link":
+// 		if len(m.Args) < 2 {
+// 			return
+// 		}
+// 		switch m.Args[1] {
+// 		case "stratum":
+// 			b.Say(m.Channel, "http://mining.bitcoin.cz/stratum-mining")
+// 		case "bter":
+// 			b.Say(m.Channel, "https://bter.com/")
+// 		}
+
+// 	case "pool":
+// 		b.Say(m.Channel, ":pool    : http://laminerie.eu")
+// 		b.Say(m.Channel, ":stratum : stratum+tcp://laminerieu.eu:3333")
+// 		b.Say(m.Channel, ":getwork : http://laminerie.eu:3335")
+// 	}
+// }
 
 const (
 	gitlabUrl string = "gitlab.gigx.be/api/v3/projects/:id/repository/commits"

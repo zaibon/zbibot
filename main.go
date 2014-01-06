@@ -4,9 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Zaibon/ircbot"
-	"github.com/Zaibon/zbibot"
+	"github.com/Zaibon/zbibot/actions"
 )
 
+//needed for the flag "channel"
 type channels []string
 
 func (c *channels) String() string {
@@ -69,12 +70,12 @@ func main() {
 	b.WebPort = flagWebPort
 
 	//set channels
-	b.AddAction("JOIN", zbibot.Greet)
-	b.AddAction("PRIVMSG", zbibot.Respond)
-	b.AddAction("JOIN", zbibot.FckBigx)
-	b.AddAction("JOIN", zbibot.KickAlex)
-	b.AddAction("PRIVMSG", zbibot.GoDock)
-	b.AddAction("PRIVMSG", zbibot.Info)
+	b.AddAction("JOIN", actions.Greet)
+	b.AddAction("PRIVMSG", actions.Respond)
+	b.AddAction("JOIN", actions.FckBigx)
+	b.AddAction("JOIN", actions.KickAlex)
+	b.AddAction("PRIVMSG", actions.GoDock)
+	b.AddAction("PRIVMSG", actions.Info)
 
 	//connectin to server, listen and serve
 	b.Connect()
