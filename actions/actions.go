@@ -96,6 +96,8 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		for _, v := range links[m.Args[1]] {
 			b.Say(m.Channel, v)
 		}
+	case "ticker":
+		ExchRate(b, m)
 	}
 }
 
