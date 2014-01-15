@@ -2,11 +2,13 @@ package actions
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestLink(t *testing.T) {
@@ -48,11 +50,6 @@ func TestTicker(t *testing.T) {
 	if jsonData["result"] != "true" {
 		t.Fail()
 	}
-
-	if jsonData["low"] != 0.00085961 {
-		t.Fail()
-	}
-
 }
 
 func TestExchRate(t *testing.T) {

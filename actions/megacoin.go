@@ -48,8 +48,8 @@ func ExchRate(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	var mecBtc float64
 
 	for _, v := range data {
-		b.Say(m.Channel, fmt.Sprintf("change       : %s", v.Id))
-		b.Say(m.Channel, fmt.Sprintf("price        : %s", v.Price))
+		b.Say(m.Channel, fmt.Sprintf("change : %s", v.Id))
+		b.Say(m.Channel, fmt.Sprintf("price  : %s", v.Price))
 		// b.Say(m.Channel, fmt.Sprintf("price -24h   : %s", v.PriceBefore24h))
 		b.Say(m.Channel, "------------------")
 
@@ -61,7 +61,7 @@ func ExchRate(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		}
 	}
 
-	b.Say(m.Channel, fmt.Sprintf("change       : %s", "mec/eur"))
-	b.Say(m.Channel, fmt.Sprintf("price        : %f", btcEur*mecBtc))
+	b.Say(m.Channel, fmt.Sprintf("change : %s", "mec/eur"))
+	b.Say(m.Channel, fmt.Sprintf("price  : %f", btcEur*mecBtc))
 	b.Say(m.Channel, "------------------")
 }
