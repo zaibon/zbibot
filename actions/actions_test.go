@@ -76,12 +76,7 @@ func TestExchRate(t *testing.T) {
 }
 
 func TestLastBlock(t *testing.T) {
-	const (
-		// baseUrl = "http://laminerie.eu?index.php"
-		apiUrl = "http://www.laminerie.eu/index.php?page=api&action=%s&api_key=%s"
-		apiKey = "dfc87f06d1f4b93f7b97209396d48647ed0c53daf7ba33eaaa5a0f0fd152bbd0"
-	)
-	url := fmt.Sprintf(apiUrl+"&limit=1", "getblocksfound", apiKey)
+	url := fmt.Sprintf(apiUrl, "getblocksfound", apiKey)
 	t.Log(url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -93,6 +88,7 @@ func TestLastBlock(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	t.Log(string(body))
 
 	var data map[string]struct {
 		Data []block
@@ -107,5 +103,51 @@ func TestLastBlock(t *testing.T) {
 	s := fmt.Sprintf("Last : #%d | Ratio %.3f%% | Confirmation %d | Mined by %s | Found Since %s",
 		lastBlock.Height, lastBlock.Ratio(), lastBlock.Confirmations, lastBlock.Finder, foundSince)
 	t.Log(s)
-	t.Fail()
+}
+
+func TestStatus(t *testing.T) {
+
+	urlStatus := fmt.Sprintf(apiUrl, "getpoolstatus", apiKey)
+	resp, err := http.Get(urlStatus)
+	if err != nil {
+		t.Error(err)
+	}
+
+	urlPublic := fmt.Sprintf(apiUrl, "public", apiKey)
+	respPub, err := http.Get(urlPublic)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer respPub.Body.Close()
+	bodyPub, err := ioutil.ReadAll(respPub.Body)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var data map[string]struct {
+		Data poolStatus
+	}
+	if err := json.Unmarshal(body, &data); err != nil {
+		t.Error(err)
+	}
+
+	var dataPub poolPublicInfo
+	if err := json.Unmarshal(bodyPub, &dataPub); err != nil {
+		t.Error(err)
+	}
+
+	ratio := (float64(dataPub.ShareCurRound) / data["getpoolstatus"].Data.EstShare) * 100
+	hashRate := float32(data["getpoolstatus"].Data.HashRate) / 1000
+	output := fmt.Sprintf("Pool Hashrate: %.3f khash/s | Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d",
+		hashRate, data["getpoolstatus"].Data.Efficency, data["getpoolstatus"].Data.NetDiff, ratio, dataPub.WorkersNbr)
+	// Pool Hashrate: 18,374 khash | Pool Efficiency: 99.57% | Current difficulty: 55.299 | Round Estimate: 56626 | Current Round: 139991 | Round: 247.22% | Workers: 29
+
+	t.Log(output)
 }

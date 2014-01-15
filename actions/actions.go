@@ -101,6 +101,9 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 	case "last":
 		LastBlock(b, m)
+
+	case "status":
+		Status(b, m)
 	}
 }
 
