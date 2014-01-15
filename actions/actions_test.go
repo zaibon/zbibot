@@ -77,3 +77,38 @@ func TestExchRate(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestLastBlock(t *testing.T) {
+	const (
+		// baseUrl = "http://laminerie.eu?index.php"
+		apiUrl = "http://www.laminerie.eu/index.php?page=api&action=%s&api_key=%s"
+		apiKey = "dfc87f06d1f4b93f7b97209396d48647ed0c53daf7ba33eaaa5a0f0fd152bbd0"
+	)
+	url := fmt.Sprintf(apiUrl+"&limit=1", "getblocksfound", apiKey)
+	t.Log(url)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var data map[string]struct {
+		Data []block
+	}
+	if err := json.Unmarshal(body, &data); err != nil {
+		t.Error(err)
+	}
+
+	lastBlock := data["getblocksfound"].Data[0]
+	foundSince := time.Now().Sub(time.Unix(lastBlock.Time, 0))
+
+	s := fmt.Sprintf("Last : #%d | Ratio %.3f%% | Confirmation %d | Mined by %s | Found Since %s",
+		lastBlock.Height, lastBlock.Ratio(), lastBlock.Confirmations, lastBlock.Finder, foundSince)
+	t.Log(s)
+	t.Fail()
+}

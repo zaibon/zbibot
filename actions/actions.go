@@ -98,6 +98,9 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		}
 	case "ticker":
 		ExchRate(b, m)
+
+	case "last":
+		LastBlock(b, m)
 	}
 }
 
