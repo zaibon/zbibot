@@ -60,6 +60,22 @@ type poolPublicInfo struct {
 	WorkersNbr    int    `json:"workers"`
 }
 
+type user struct {
+	HashRate  int    `json:"hashrate"`
+	ShareRate string `sjson:"shareharerate"`
+	UserName  string `json:"username"`
+	Share     shares `json:"shares"`
+}
+
+type shares struct {
+	DonatePercent float64 `json:"donate_percent"`
+	Id            uint64  `json:"id"`
+	Invalid       uint    `json:"invalid"`
+	IsAnonymous   int     `json:"is_anonymous"`
+	Username      string  `json:"username"`
+	Valid         uint64  `json:"valid"`
+}
+
 func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	url := fmt.Sprintf(apiUrl+`&limit=1`, `getblocksfound`, apiKey)
 
@@ -94,14 +110,14 @@ func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 }
 
 func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	urlStatus := fmt.Sprintf(apiUrl, "getpoolstatus", apiKey)
+	urlStatus := fmt.Sprintf(apiUrl, `getpoolstatus`, apiKey)
 	resp, err := http.Get(urlStatus)
 	if err != nil {
 		b.Error <- err
 		return
 	}
 
-	urlPublic := fmt.Sprintf(apiUrl, "public", apiKey)
+	urlPublic := fmt.Sprintf(apiUrl, `public`, apiKey)
 	respPub, err := http.Get(urlPublic)
 	if err != nil {
 		b.Error <- err
@@ -136,10 +152,46 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		return
 	}
 
-	ratio := (float64(dataPub.ShareCurRound) / data["getpoolstatus"].Data.EstShare) * 100
-	hashRate := float32(data["getpoolstatus"].Data.HashRate) / 1000
-	output := fmt.Sprintf("Pool Hashrate: %.3f khash/s | Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d",
-		hashRate, data["getpoolstatus"].Data.Efficency, data["getpoolstatus"].Data.NetDiff, ratio, dataPub.WorkersNbr)
+	ratio := (float64(dataPub.ShareCurRound) / data[`getpoolstatus`].Data.EstShare) * 100
+	hashRate := float32(data[`getpoolstatus`].Data.HashRate) / 1000
+	output := fmt.Sprintf(`Pool Hashrate: %.3f khash/s | Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d`,
+		hashRate, data[`getpoolstatus`].Data.Efficency, data[`getpoolstatus`].Data.NetDiff, ratio, dataPub.WorkersNbr)
+
+	b.Say(m.Channel, output)
+}
+
+func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+	var username string
+	if len(m.Args) < 2 {
+		username = m.Nick
+	} else {
+		username = m.Args[1]
+	}
+
+	urlStatus := fmt.Sprintf(apiUrl+"&id=%s", "getuserstatus", apiKey, username)
+	resp, err := http.Get(urlStatus)
+	if err != nil {
+		b.Error <- err
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		b.Error <- err
+		return
+	}
+
+	var data map[string]struct {
+		Data user
+	}
+	if err := json.Unmarshal(body, &data); err != nil {
+		b.Error <- err
+		return
+	}
+	user := data["getuserstatus"].Data
+	output := fmt.Sprintf("Username: %s | HashRate: %d Kh/s | ShareRate %s | Share Valid : %d | Share Invalid: %d",
+		user.UserName, user.HashRate, user.ShareRate, user.Share.Valid, user.Share.Invalid)
 
 	b.Say(m.Channel, output)
 }

@@ -104,6 +104,9 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 	case "status":
 		Status(b, m)
+
+	case "u", "user":
+		User(b, m)
 	}
 }
 

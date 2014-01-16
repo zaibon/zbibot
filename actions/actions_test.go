@@ -151,3 +151,33 @@ func TestStatus(t *testing.T) {
 
 	t.Log(output)
 }
+
+func TestUser(t *testing.T) {
+	input := "ipodpowa"
+
+	urlStatus := fmt.Sprintf(apiUrl+"&id=%s", "getuserstatus", apiKey, input)
+	resp, err := http.Get(urlStatus)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var data map[string]struct {
+		Data user
+	}
+	if err := json.Unmarshal(body, &data); err != nil {
+		t.Error(err)
+	}
+	user := data["getuserstatus"].Data
+	output := fmt.Sprintf("Username: %s | HashRate: %d Kh/s | ShareRate %s | Share Valid : %d | Share Invalid: %d",
+		user.UserName, user.HashRate, user.ShareRate, user.Share.Valid, user.Share.Invalid)
+
+	t.Log(output)
+	t.Log(data)
+	t.Fail()
+}
