@@ -79,6 +79,140 @@ type shares struct {
 	Valid         uint64  `json:"valid"`
 }
 
+type blockStats struct {
+	OneHourhAmout     float64 `json:"1HourAmount"`
+	OneHourhDiff      float64 `json:"1HourDifficulty"`
+	OneHourhEstShares uint    `json:"1HourEstimatedShares"`
+	OneHourhOrphan    string  `json:"1HourOrphan"`
+	OneHourhShares    string  `json:"1HourShares"`
+	OneHourhTotal     string  `json:"1HourTotal"`
+	OneHourhValid     string  `json:"1HourValid"`
+
+	YesterdayAmout     float64 `json:"24HourAmount"`
+	YesterdayDiff      float64 `json:"24HourDifficulty"`
+	YesterdayEstShares uint    `json:"24HourEstimatedShares"`
+	YesterdayOrphan    string  `json:"24HourOrphan"`
+	YesterdayShares    string  `json:"24HourShares"`
+	YesterdayTotal     string  `json:"24HourTotal"`
+	YesterdayValid     string  `json:"24HourValid"`
+
+	WeekAmout     float64 `json:"7DaysAmount"`
+	WeekDiff      float64 `json:"7DaysDifficulty"`
+	WeekEstShares uint    `json:"7DaysEstimatedShares"`
+	WeekOrphan    string  `json:"7DaysOrphan"`
+	WeekShares    string  `json:"7DaysShares"`
+	WeekTotal     string  `json:"7DaysTotal"`
+	WeekValid     string  `json:"7DaysValid"`
+
+	FourWeeksAmout      float64 `json:"4WeeksAmount"`
+	FourWeekshDiff      float64 `json:"4WeeksDifficulty"`
+	FourWeekshEstShares uint    `json:"4WeeksEstimatedShares"`
+	FourWeekshOrphan    string  `json:"4WeeksOrphan"`
+	FourWeekshShares    string  `json:"4WeeksShares"`
+	FourWeekshTotal     string  `json:"4WeeksTotal"`
+	FourWeekshValid     string  `json:"4WeeksValid"`
+
+	YearAmout     float64 `json:"12MonthAmount"`
+	YearDiff      float64 `json:"12MonthDifficulty"`
+	YearEstShares uint    `json:"12MonthEstimatedShares"`
+	YearOrphan    string  `json:"12MonthOrphan"`
+	YearShares    string  `json:"12MonthShares"`
+	YearTotal     string  `json:"12MonthTotal"`
+	YearValid     string  `json:"12MonthValid"`
+
+	Total          uint    `json:"Total"`
+	TotalAmount    float64 `json:"TotalAmount"`
+	TotalDiff      float64 `json:"TotalDifficulty"`
+	TotalEstSahres uint    `json:"TotalEstimatedShares"`
+	TotalOrphan    string  `json:"TotalOrphan"`
+	TotalShares    string  `json:"TotalShares"`
+	TotalValid     string  `json:"TotalValid"`
+}
+
+func (b *blockStats) OneHourEfficency() float32 {
+	var oneHourEfficency float32
+	if b.OneHourhShares == "0" {
+		return 0
+	} else {
+		oneHourShares, err := strconv.ParseFloat(b.OneHourhShares, 32)
+		if err != nil {
+			return 0
+		}
+		oneHourEfficency = (float32(oneHourShares) / float32(b.OneHourhEstShares)) * 100
+		return oneHourEfficency
+	}
+}
+
+func (b *blockStats) YestardayEfficency() float32 {
+	var yesterdayEfficency float32
+	if b.YesterdayShares == "0" {
+		return 0
+	} else {
+		yesterdayShares, err := strconv.ParseFloat(b.YesterdayShares, 32)
+		if err != nil {
+			return 0
+		}
+		yesterdayEfficency = (float32(yesterdayShares) / float32(b.YesterdayEstShares)) * 100
+		return yesterdayEfficency
+	}
+}
+
+func (b *blockStats) WeekEfficency() float32 {
+	var WeekEfficency float32
+	if b.WeekShares == "0" {
+		return 0
+	} else {
+		WeekShares, err := strconv.ParseFloat(b.WeekShares, 32)
+		if err != nil {
+			return 0
+		}
+		WeekEfficency = (float32(WeekShares) / float32(b.WeekEstShares)) * 100
+		return WeekEfficency
+	}
+}
+
+func (b *blockStats) FourWeekEfficency() float32 {
+	var fourWeekEfficency float32
+	if b.FourWeekshShares == "0" {
+		return 0
+	} else {
+		fourWeekShares, err := strconv.ParseFloat(b.FourWeekshShares, 32)
+		if err != nil {
+			return 0
+		}
+		fourWeekEfficency = (float32(fourWeekShares) / float32(b.FourWeekshEstShares)) * 100
+		return fourWeekEfficency
+	}
+}
+
+func (b *blockStats) YearEfficency() float32 {
+	var yearEfficency float32
+	if b.YearShares == "0" {
+		return 0
+	} else {
+		yearShares, err := strconv.ParseFloat(b.YearShares, 32)
+		if err != nil {
+			return 0
+		}
+		yearEfficency = (float32(yearShares) / float32(b.YearEstShares)) * 100
+		return yearEfficency
+	}
+}
+
+func (b *blockStats) TotalEfficency() float32 {
+	var totalEfficency float32
+	if b.TotalShares == "0" {
+		return 0
+	} else {
+		totalShares, err := strconv.ParseFloat(b.TotalShares, 32)
+		if err != nil {
+			return 0
+		}
+		totalEfficency = (float32(totalShares) / float32(b.TotalEstSahres)) * 100
+		return totalEfficency
+	}
+}
+
 func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	var (
 		nbrLastBlock int = 1
@@ -173,7 +307,7 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	ratio := (float64(dataPub.ShareCurRound) / data[`getpoolstatus`].Data.EstShare) * 100
 	poolHashRate := float32(data[`getpoolstatus`].Data.HashRate) / 1000
 	netHashRate := float32(data[`getpoolstatus`].Data.NetHashRate) / 1000000
-	output := fmt.Sprintf(`Pool Hashrate: %.3f KHash/s | Net Hashrate : %f MHash/s | Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d`,
+	output := fmt.Sprintf(`Pool Hashrate: %.3f MHash/s | Net Hashrate : %f MHash/s | Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d`,
 		poolHashRate, netHashRate, data[`getpoolstatus`].Data.Efficency, data[`getpoolstatus`].Data.NetDiff, ratio, dataPub.WorkersNbr)
 
 	b.Say(m.Channel, output)
@@ -213,4 +347,50 @@ func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		user.UserName, user.HashRate, user.ShareRate, user.Share.Valid, user.Share.Invalid)
 
 	b.Say(m.Channel, output)
+}
+
+func OverallStats(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+	urlStatus := fmt.Sprintf(apiUrl, "getblockstats", apiKey)
+	resp, err := http.Get(urlStatus)
+	if err != nil {
+		b.Error <- err
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		b.Error <- err
+		return
+	}
+
+	var data map[string]struct {
+		Data blockStats
+	}
+	if err := json.Unmarshal(body, &data); err != nil {
+		b.Error <- err
+		return
+	}
+	stats := data["getblockstats"].Data
+
+	output1 := fmt.Sprintf("Last Hour  | Found : %4s | Valid : %4s | Orphan %s | Efficiency %f %%%%",
+		stats.OneHourhTotal, stats.OneHourhValid, stats.OneHourhOrphan, stats.OneHourEfficency())
+
+	output2 := fmt.Sprintf("Last 24H   | Found : %4s | Valid : %4s | Orphan %s | Efficiency %f %%%%",
+		stats.YesterdayTotal, stats.YesterdayValid, stats.YesterdayOrphan, stats.YestardayEfficency())
+
+	output3 := fmt.Sprintf("Last Week  | Found : %4s | Valid : %4s | Orphan %s | Efficiency %f %%%%",
+		stats.WeekTotal, stats.WeekValid, stats.WeekOrphan, stats.WeekEfficency())
+
+	output4 := fmt.Sprintf("Last Year  | Found : %4s | Valid : %4s | Orphan %s | Efficiency %f %%%%",
+		stats.YearTotal, stats.YearValid, stats.YearOrphan, stats.YearEfficency())
+
+	output5 := fmt.Sprintf("Last Year  | Found : %4d | Valid : %4s | Orphan %s | Efficiency %f %%%%",
+		stats.Total, stats.TotalValid, stats.TotalOrphan, stats.TotalEfficency())
+
+	b.Say(m.Channel, output1)
+	b.Say(m.Channel, output2)
+	b.Say(m.Channel, output3)
+	b.Say(m.Channel, output4)
+	b.Say(m.Channel, output5)
 }
