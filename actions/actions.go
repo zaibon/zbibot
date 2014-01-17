@@ -65,7 +65,7 @@ func Respond(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 }
 
-func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+func InteractiveCommands(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	if !strings.HasPrefix(m.Args[0], ":.") {
 		return
 	}

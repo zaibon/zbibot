@@ -72,10 +72,10 @@ func main() {
 	//set channels
 	b.AddAction("JOIN", actions.Greet)
 	b.AddAction("PRIVMSG", actions.Respond)
-	b.AddAction("JOIN", actions.FckBigx)
-	// b.AddAction("JOIN", actions.KickAlex)
-	b.AddAction("PRIVMSG", actions.GoDock)
-	b.AddAction("PRIVMSG", actions.Info)
+
+	//command fire by users
+	b.AddAction("PRIVMSG", actions.InteractiveCommands)
+
 
 	//connectin to server, listen and serve
 	b.Connect()
