@@ -144,9 +144,10 @@ func TestStatus(t *testing.T) {
 	}
 
 	ratio := (float64(dataPub.ShareCurRound) / data["getpoolstatus"].Data.EstShare) * 100
-	hashRate := float32(data["getpoolstatus"].Data.HashRate) / 1000
-	output := fmt.Sprintf("Pool Hashrate: %.3f khash/s | Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d",
-		hashRate, data["getpoolstatus"].Data.Efficency, data["getpoolstatus"].Data.NetDiff, ratio, dataPub.WorkersNbr)
+	poolHashRate := float32(data["getpoolstatus"].Data.HashRate) / 1000
+	netHashRate := float32(data[`getpoolstatus`].Data.NetHashRate) / 1000000000
+	output := fmt.Sprintf("Pool Hashrate: %.3f khash/s | Net hasrate: %f Ghash/s| Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d",
+		poolHashRate, netHashRate, data["getpoolstatus"].Data.Efficency, data["getpoolstatus"].Data.NetDiff, ratio, dataPub.WorkersNbr)
 	// Pool Hashrate: 18,374 khash | Pool Efficiency: 99.57% | Current difficulty: 55.299 | Round Estimate: 56626 | Current Round: 139991 | Round: 247.22% | Workers: 29
 
 	t.Log(output)
@@ -179,5 +180,4 @@ func TestUser(t *testing.T) {
 
 	t.Log(output)
 	t.Log(data)
-	t.Fail()
 }

@@ -75,6 +75,7 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	if err != nil {
 		return
 	}
+	defer f.Close()
 	//unmarshall into map
 	links := make(map[string][]string)
 	dec := json.NewDecoder(f)
@@ -87,9 +88,11 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		if len(m.Args) < 2 {
 			//no link spécified
 			//display all available
+			helpLinks := ""
 			for k, _ := range links {
-				b.Say(m.Channel, k)
+				helpLinks += k + " "
 			}
+			b.Say(m.Channel, helpLinks)
 			return
 		}
 
@@ -97,7 +100,7 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 			b.Say(m.Channel, v)
 		}
 	case "ticker":
-		ExchRate(b, m)
+		Ticker(b, m)
 
 	case "last":
 		LastBlock(b, m)
@@ -107,6 +110,8 @@ func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 	case "u", "user":
 		User(b, m)
+	case "help":
+		b.Say(m.Channel, ".link .ticker .last .status .u .user")
 	}
 }
 

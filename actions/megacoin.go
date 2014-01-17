@@ -21,7 +21,7 @@ type cryptocoinchartsJson struct {
 	LatestTrade    string `json:latest_trade`
 }
 
-func ExchRate(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+func Ticker(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	resp, err := http.PostForm("http://www.cryptocoincharts.info/v2/api/tradingPairs", url.Values{"pairs": {"mec_btc,btc_usb,btc_eur"}})
 	if err != nil {
 		b.Say(m.Channel, err.Error())
