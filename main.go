@@ -76,6 +76,8 @@ func main() {
 	//command fire by users
 	b.AddAction("PRIVMSG", actions.InteractiveCommands)
 
+	//launch a go routine that check for found blocks
+	actions.FindBlock(b)
 
 	//connectin to server, listen and serve
 	b.Connect()
