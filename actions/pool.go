@@ -8,6 +8,7 @@ import (
 	`github.com/Zaibon/ircbot`
 	`io/ioutil`
 	`net/http`
+	"strconv"
 	`time`
 )
 
@@ -79,7 +80,18 @@ type shares struct {
 }
 
 func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	url := fmt.Sprintf(apiUrl+`&limit=1`, `getblocksfound`, apiKey)
+	var (
+		nbrLastBlock int = 1
+		errConv      error
+	)
+	if len(m.Args) >= 2 {
+		nbrLastBlock, errConv = strconv.Atoi(m.Args[1])
+		if errConv != nil {
+			nbrLastBlock = 1
+		}
+	}
+
+	url := fmt.Sprintf(apiUrl, `getblocksfound`, apiKey)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -101,14 +113,18 @@ func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		b.Error <- err
 		return
 	}
-	lastBlock := data[`getblocksfound`].Data[0]
-	foundSince := time.Now().Sub(time.Unix(lastBlock.Time, 0))
 
-	//%%%% => irc requierd double % too
-	output := fmt.Sprintf(`Last : #%d | Ratio %.3f%%%% | Confirmation %d | Mined by %s | Found Since %s`,
-		lastBlock.Height, lastBlock.Ratio(), lastBlock.Confirmations, lastBlock.Finder, foundSince)
+	now := time.Now()
+	for i := 0; i < nbrLastBlock; i++ {
+		lastBlock := data[`getblocksfound`].Data[i]
+		foundSince := now.Sub(time.Unix(lastBlock.Time, 0))
 
-	b.Say(m.Channel, output)
+		//%%%% => irc requierd double % too
+		output := fmt.Sprintf(`Last : #%d | Ratio %.3f%%%% | Confirmation %3d | Mined by %10s| Found Since %s`,
+			lastBlock.Height, lastBlock.Ratio(), lastBlock.Confirmations, lastBlock.Finder, foundSince)
+
+		b.Say(m.Channel, output)
+	}
 }
 
 func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
