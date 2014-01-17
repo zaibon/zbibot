@@ -157,7 +157,7 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	ratio := (float64(dataPub.ShareCurRound) / data[`getpoolstatus`].Data.EstShare) * 100
 	poolHashRate := float32(data[`getpoolstatus`].Data.HashRate) / 1000
 	netHashRate := float32(data[`getpoolstatus`].Data.NetHashRate) / 1000000
-	output := fmt.Sprintf(`Pool Hashrate: %.3f khash/s | Net Hashrate : %f  Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d`,
+	output := fmt.Sprintf(`Pool Hashrate: %.3f KHash/s | Net Hashrate : %f MHash/s | Pool Efficiency: %.2f%%%% | Current Difficulty: %f | Round %.3f%%%% | Workers: %d`,
 		poolHashRate, netHashRate, data[`getpoolstatus`].Data.Efficency, data[`getpoolstatus`].Data.NetDiff, ratio, dataPub.WorkersNbr)
 
 	b.Say(m.Channel, output)
