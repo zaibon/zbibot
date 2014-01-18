@@ -42,13 +42,13 @@ func FindBlock(b *ircbot.IrcBot) {
 				previous_height = blockInfo.Height
 			} else if previous_height != blockInfo.Height {
 				//new block found !
-
+				previous_height = blockInfo.Height
 				//we can't be sure the first channel is the good one. need to be fix
 				b.Say(b.Channel[0], "Hey ! devinez quoi ??")
 				time.Sleep(500 * time.Millisecond)
 
-				output := fmt.Sprintf("BLOCK FOUND !!! #%d | %d shares | Mined By %s | Amount %f",
-					blockInfo.Height, blockInfo.Shares, blockInfo.Amount)
+				output := fmt.Sprintf("BLOCK FOUND !!! #%d | Ratio %f %%%% | Mined By %s | Amount %f",
+					blockInfo.Height, blockInfo.Ratio(), blockInfo.WorkerName, blockInfo.Amount)
 				b.Say(b.Channel[0], output)
 			} else {
 				fmt.Println("INFO : no new blocks")

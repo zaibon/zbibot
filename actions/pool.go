@@ -20,7 +20,7 @@ const (
 type block struct {
 	AccountId     uint    `json:"account_id"`
 	Accounted     int     `json:"accounted"`
-	Amount        float64 `json:"jsonamount"`
+	Amount        float64 `json:"amount"`
 	BlockHash     string  `json:"blockhash"`
 	Confirmations uint    `json:"confirmations"`
 	Difficulty    float64 `json:"difficulty"`
