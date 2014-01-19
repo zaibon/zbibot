@@ -385,7 +385,7 @@ func OverallStats(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	output4 := fmt.Sprintf("Last Year  | Found : %4s | Valid : %4s | Orphan %s | Efficiency %f %%%%",
 		stats.YearTotal, stats.YearValid, stats.YearOrphan, stats.YearEfficency())
 
-	output5 := fmt.Sprintf("Last Year  | Found : %4d | Valid : %4s | Orphan %s | Efficiency %f %%%%",
+	output5 := fmt.Sprintf("Total      | Found : %4d | Valid : %4s | Orphan %s | Efficiency %f %%%%",
 		stats.Total, stats.TotalValid, stats.TotalOrphan, stats.TotalEfficency())
 
 	b.Say(m.Channel, output1)
