@@ -111,7 +111,7 @@ func InteractiveCommands(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	case "u", "user":
 		User(b, m)
 	case "help":
-		b.Say(m.Channel, ".link .ticker .last <nbr> .status .u <user> .user <user> .stats")
+		b.Say(m.Channel, ".link [coin], .ticker [coin], .last [coin] <nbr>, .status [coin], .u [coin] <user>, .stats [coin]")
 	case "stats":
 		OverallStats(b, m)
 	}

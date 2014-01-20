@@ -316,7 +316,7 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		return
 	}
 
-	urlPublic := fmt.Sprintf(apiUrl, `public`, apiKey)
+	urlPublic := fmt.Sprintf(apis[coin].Url, `public`, apis[coin].Key)
 	respPub, err := http.Get(urlPublic)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
