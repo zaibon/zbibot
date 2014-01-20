@@ -12,10 +12,32 @@ import (
 	`time`
 )
 
-const (
-	apiUrl = `http://www.laminerie.eu/index.php?page=api&action=%s&api_key=%s`
-	apiKey = `dfc87f06d1f4b93f7b97209396d48647ed0c53daf7ba33eaaa5a0f0fd152bbd0`
+type apiInfo struct {
+	Url string
+	Key string
+}
+
+var (
+	apis map[string]apiInfo
 )
+
+func init() {
+	apis = make(map[string]apiInfo)
+	apis["mec"] = apiInfo{
+		"http://mec.laminerie.eu/index.php?page=api&action=%s&api_key=%s",
+		"dfc87f06d1f4b93f7b97209396d48647ed0c53daf7ba33eaaa5a0f0fd152bbd0",
+	}
+
+	apis["dog"] = apiInfo{
+		"http://dog.laminerie.eu/index.php?page=api&action=%s&api_key=%s",
+		"662cbf3089a553a829920c92d5e9f50211c450080d24e06208ed002ebb900426",
+	}
+
+	apis["dgc"] = apiInfo{
+		"http://dgc.laminerie.eu/index.php?page=api&action=%s&api_key=%s",
+		"6809824cad83251a35bdc7b040d9e2c59e0145bea19258cf6a42455123731b46",
+	}
+}
 
 type block struct {
 	AccountId     uint    `json:"account_id"`
@@ -40,15 +62,15 @@ func (b *block) Ratio() float64 {
 }
 
 type poolStatus struct {
-	CurrentNetWorkBlock uint32  `json:"currentnetworkblock"`
+	CurrentNetWorkBlock uint64  `json:"currentnetworkblock"`
 	Efficency           float32 `json:"efficiency"`
 	EstShare            float64 `json:"estshares"`
 	EstTime             float64 `json:"esttime"`
-	HashRate            uint32  `json:"hashrate"`
+	HashRate            uint64  `json:"hashrate"`
 	LastBlock           uint    `json:"lastblock"`
-	NetHashRate         uint32  `json:"nethashrate"`
-	NetDiff             float32 `json:"networkdiff"`
-	NextNetWorkBlock    uint32  `json:"nextnetworkblock"`
+	NetHashRate         uint64  `json:"nethashrate"`
+	NetDiff             float64 `json:"networkdiff"`
+	NextNetWorkBlock    uint64  `json:"nextnetworkblock"`
 	PoolName            string  `json:"pool_name"`
 	TimeSinceLast       uint    `json:"timesincelast"`
 	WorkersNbr          uint    `json:"workers"`
@@ -214,29 +236,38 @@ func (b *blockStats) TotalEfficency() float32 {
 }
 
 func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	var (
-		nbrLastBlock int = 1
-		errConv      error
-	)
-	if len(m.Args) >= 2 {
-		nbrLastBlock, errConv = strconv.Atoi(m.Args[1])
+	if len(m.Args) < 2 {
+		b.Say(m.Channel, "de quelle pool tu parle ?")
+		return
+	}
+
+	coin := m.Args[1]
+	if _, ok := apis[coin]; ok == false {
+		b.Say(m.Channel, "je connais pas cette pool la ?")
+		return
+	}
+
+	var nbrLastBlock int = 1
+	var errConv error
+	if len(m.Args) >= 3 {
+		nbrLastBlock, errConv = strconv.Atoi(m.Args[2])
 		if errConv != nil {
 			nbrLastBlock = 1
 		}
 	}
 
-	url := fmt.Sprintf(apiUrl, `getblocksfound`, apiKey)
+	url := fmt.Sprintf(apis[coin].Url, `getblocksfound`, apis[coin].Key)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
@@ -244,7 +275,12 @@ func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		Data []block
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		return
+	}
+
+	if len(data[`getblocksfound`].Data) < 1 {
+		b.Say(m.Channel, "Not block found yet")
 		return
 	}
 
@@ -262,31 +298,42 @@ func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 }
 
 func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	urlStatus := fmt.Sprintf(apiUrl, `getpoolstatus`, apiKey)
+	if len(m.Args) < 2 {
+		b.Say(m.Channel, "de quelle pool tu parle ?")
+		return
+	}
+
+	coin := m.Args[1]
+	if _, ok := apis[coin]; ok == false {
+		b.Say(m.Channel, "je connais pas cette pool la...")
+		return
+	}
+
+	urlStatus := fmt.Sprintf(apis[coin].Url, `getpoolstatus`, apis[coin].Key)
 	resp, err := http.Get(urlStatus)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
 	urlPublic := fmt.Sprintf(apiUrl, `public`, apiKey)
 	respPub, err := http.Get(urlPublic)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
 	defer respPub.Body.Close()
 	bodyPub, err := ioutil.ReadAll(respPub.Body)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
@@ -294,13 +341,13 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		Data poolStatus
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
 	var dataPub poolPublicInfo
 	if err := json.Unmarshal(bodyPub, &dataPub); err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
@@ -314,24 +361,35 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 }
 
 func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	var username string
 	if len(m.Args) < 2 {
-		username = m.Nick
-	} else {
-		username = m.Args[1]
+		b.Say(m.Channel, "de quelle pool tu parle ?")
+		return
 	}
 
-	urlStatus := fmt.Sprintf(apiUrl+"&id=%s", "getuserstatus", apiKey, username)
+	coin := m.Args[1]
+	if _, ok := apis[coin]; ok == false {
+		b.Say(m.Channel, "je connais pas cette pool la...")
+		return
+	}
+
+	var username string
+	if len(m.Args) < 3 {
+		username = m.Nick
+	} else {
+		username = m.Args[2]
+	}
+
+	urlStatus := fmt.Sprintf(apis[coin].Url+"&id=%s", "getuserstatus", apis[coin].Key, username)
 	resp, err := http.Get(urlStatus)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
@@ -339,7 +397,7 @@ func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		Data user
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 	user := data["getuserstatus"].Data
@@ -350,17 +408,28 @@ func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 }
 
 func OverallStats(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	urlStatus := fmt.Sprintf(apiUrl, "getblockstats", apiKey)
+	if len(m.Args) < 2 {
+		b.Say(m.Channel, "de quelle pool tu parle ?")
+		return
+	}
+
+	coin := m.Args[1]
+	if _, ok := apis[coin]; ok == false {
+		b.Say(m.Channel, "je connais pas cette pool la...")
+		return
+	}
+
+	urlStatus := fmt.Sprintf(apis[coin].Url, "getblockstats", apis[coin].Key)
 	resp, err := http.Get(urlStatus)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 
@@ -368,7 +437,7 @@ func OverallStats(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		Data blockStats
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
-		b.Error <- err
+		b.Say(m.Channel, "j'ai pas envie de faire ca")
 		return
 	}
 	stats := data["getblockstats"].Data
