@@ -12,12 +12,12 @@ import (
 func FindBlock(b *ircbot.IrcBot) {
 
 	//launch a go routine for each pool we watch
-	for _, api := range apis {
+	for coin, api := range apis {
 
 		var previous_height uint64 = 0
 		url := fmt.Sprintf(api.Url+`&limit=1`, `getblocksfound`, api.Key)
 
-		go func(b *ircbot.IrcBot) {
+		go func(b *ircbot.IrcBot, coin string, api apiInfo) {
 			for {
 
 				resp, err := http.Get(url)
@@ -51,20 +51,18 @@ func FindBlock(b *ircbot.IrcBot) {
 					} else if previous_height != blockInfo.Height {
 						//new block found !
 						previous_height = blockInfo.Height
-						//FIXME : we can't be sure the first channel is the good one
-						b.Say(b.Channel[0], "Hey ! devinez quoi ??")
-						time.Sleep(500 * time.Millisecond)
 
-						output := fmt.Sprintf("BLOCK FOUND !!! #%d | Ratio %f %%%% | Mined By %s | Amount %f",
-							blockInfo.Height, blockInfo.Ratio(), blockInfo.WorkerName, blockInfo.Amount)
-						b.Say(b.Channel[0], output)
+						output := fmt.Sprintf("[%s] BLOCK FOUND !!! #%d | Ratio %f %%%% | Mined By %s | Amount %f",
+							coin, blockInfo.Height, blockInfo.Ratio(), blockInfo.WorkerName, blockInfo.Amount)
+
+						b.Say(b.Channel[0], output) //FIXME : we can't be sure the first channel is the good one
 					} else {
-						fmt.Println("INFO : no new blocks")
+						fmt.Printf("INFO : [%s],no new blocks\n", coin)
 					}
 				}
 				//check every 30 seconds for new found block
 				time.Sleep(30 * time.Second)
 			}
-		}(b)
+		}(b, coin, api)
 	}
 }
