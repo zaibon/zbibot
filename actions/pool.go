@@ -37,6 +37,11 @@ func init() {
 		"http://dgc.laminerie.eu/index.php?page=api&action=%s&api_key=%s",
 		"6809824cad83251a35bdc7b040d9e2c59e0145bea19258cf6a42455123731b46",
 	}
+
+	apis["tes"] = apiInfo{
+		"http://tes.laminerie.eu/index.php?page=api&action=%s&api_key=%s",
+		"ffe8fc647a222f86ad264b775ccc816237271862e9a0ae660a59f8d54ba27113",
+	}
 }
 
 type block struct {
