@@ -45,11 +45,11 @@ func init() {
 }
 
 type block struct {
-	AccountId     uint    `json:"account_id"`
+	AccountId     int64   `json:"account_id"`
 	Accounted     int     `json:"accounted"`
 	Amount        float64 `json:"amount"`
 	BlockHash     string  `json:"blockhash"`
-	Confirmations uint    `json:"confirmations"`
+	Confirmations int64   `json:"confirmations"`
 	Difficulty    float64 `json:"difficulty"`
 	EstShares     float64 `json:"estshares"`
 	Finder        string  `json:"finder"`
