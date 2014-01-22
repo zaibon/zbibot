@@ -266,6 +266,7 @@ func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	resp, err := http.Get(url)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -273,6 +274,7 @@ func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -281,6 +283,7 @@ func LastBlock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -318,6 +321,7 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	resp, err := http.Get(urlStatus)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -325,6 +329,7 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	respPub, err := http.Get(urlPublic)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -332,6 +337,7 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -339,6 +345,7 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	bodyPub, err := ioutil.ReadAll(respPub.Body)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -347,12 +354,14 @@ func Status(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
 	var dataPub poolPublicInfo
 	if err := json.Unmarshal(bodyPub, &dataPub); err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -388,6 +397,7 @@ func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	resp, err := http.Get(urlStatus)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -395,6 +405,7 @@ func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -403,6 +414,7 @@ func User(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 	user := data["getuserstatus"].Data
@@ -428,6 +440,7 @@ func OverallStats(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	resp, err := http.Get(urlStatus)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -435,6 +448,7 @@ func OverallStats(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 
@@ -443,6 +457,7 @@ func OverallStats(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
 		b.Say(m.Channel, "j'ai pas envie de faire ca")
+		fmt.Println("ERROR: ", err)
 		return
 	}
 	stats := data["getblockstats"].Data
