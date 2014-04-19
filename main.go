@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/Zaibon/ircbot"
 	"github.com/Zaibon/zbibot/actions"
 )
@@ -70,14 +71,17 @@ func main() {
 	b.WebPort = flagWebPort
 
 	//set channels
-	b.AddAction("JOIN", actions.Greet)
-	b.AddAction("PRIVMSG", actions.Respond)
+	b.AddInternAction(&actions.Greet{})
+	b.AddInternAction(&actions.Respond{})
 
 	//command fire by users
-	b.AddAction("PRIVMSG", actions.InteractiveCommands)
+	// b.AddUserAction("PRIVMSG", actions.InteractiveCommands)
+	b.AddUserAction(&actions.Help{})
 
+	fmt.Println(b.HandlersIntern)
+	fmt.Println(b.HandlersUser)
 	//launch a go routine that check for found blocks
-	actions.FindBlock(b)
+	// actions.FindBlock(b)
 
 	//connectin to server, listen and serve
 	b.Connect()

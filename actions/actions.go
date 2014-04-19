@@ -1,13 +1,10 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/Zaibon/ircbot"
-	"math/rand"
-	"os"
-	"strings"
 	"time"
+
+	"github.com/Zaibon/ircbot"
 )
 
 func KickAlex(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
@@ -31,91 +28,57 @@ func FckBigx(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	}
 }
 
-func Greet(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	if m.Nick == b.Nick {
-		b.Joined = true
-		return
-	}
+// func InteractiveCommands(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+// 	if !strings.HasPrefix(m.Args[0], ":.") {
+// 		return
+// 	}
 
-	s := fmt.Sprintf("%s :Salut %s", m.Channel, m.Nick)
-	b.Out <- &ircbot.IrcMsg{
-		Command: "PRIVMSG",
-		Args:    []string{s},
-	}
-}
+// 	//read file that contains link
+// 	f, err := os.Open("infoUrl.json")
+// 	if err != nil {
+// 		return
+// 	}
+// 	defer f.Close()
+// 	//unmarshall into map
+// 	links := make(map[string][]string)
+// 	dec := json.NewDecoder(f)
+// 	dec.Decode(&links)
 
-func Respond(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	response := []string{
-		"oui ?",
-		"on parle de moi ?",
-		"Je suis pas là",
-	}
+// 	//parse irc command
+// 	command := strings.TrimPrefix(m.Args[0], ":.")
+// 	switch command {
+// 	case "link":
+// 		if len(m.Args) < 2 {
+// 			//no link spécified
+// 			//display all available
+// 			helpLinks := ""
+// 			for k, _ := range links {
+// 				helpLinks += k + " "
+// 			}
+// 			b.Say(m.Channel, helpLinks)
+// 			return
+// 		}
 
-	s := strings.Join(m.Args, " ")
+// 		for _, v := range links[m.Args[1]] {
+// 			b.Say(m.Channel, v)
+// 		}
+// 	case "ticker":
+// 		Ticker(b, m)
 
-	if strings.Contains(s, b.Nick) {
-		nbr := rand.Intn(len(response))
-		line := fmt.Sprintf(":%s", response[nbr])
-		b.Out <- &ircbot.IrcMsg{
-			Command: "PRIVMSG",
-			Channel: m.Channel,
-			Args:    []string{line},
-		}
-	}
+// 	case "last":
+// 		LastBlock(b, m)
 
-}
+// 	case "status":
+// 		Status(b, m)
 
-func InteractiveCommands(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	if !strings.HasPrefix(m.Args[0], ":.") {
-		return
-	}
-
-	//read file that contains link
-	f, err := os.Open("infoUrl.json")
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	//unmarshall into map
-	links := make(map[string][]string)
-	dec := json.NewDecoder(f)
-	dec.Decode(&links)
-
-	//parse irc command
-	command := strings.TrimPrefix(m.Args[0], ":.")
-	switch command {
-	case "link":
-		if len(m.Args) < 2 {
-			//no link spécified
-			//display all available
-			helpLinks := ""
-			for k, _ := range links {
-				helpLinks += k + " "
-			}
-			b.Say(m.Channel, helpLinks)
-			return
-		}
-
-		for _, v := range links[m.Args[1]] {
-			b.Say(m.Channel, v)
-		}
-	case "ticker":
-		Ticker(b, m)
-
-	case "last":
-		LastBlock(b, m)
-
-	case "status":
-		Status(b, m)
-
-	case "u", "user":
-		User(b, m)
-	case "help":
-		b.Say(m.Channel, ".link [coin], .ticker [coin], .last [coin] <nbr>, .status [coin], .u [coin] <user>, .stats [coin]")
-	case "stats":
-		OverallStats(b, m)
-	}
-}
+// 	case "u", "user":
+// 		User(b, m)
+// 	case "help":
+// 		b.Say(m.Channel, ".link [coin], .ticker [coin], .last [coin] <nbr>, .status [coin], .u [coin] <user>, .stats [coin]")
+// 	case "stats":
+// 		OverallStats(b, m)
+// 	}
+// }
 
 // func Info(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 // 	if !strings.HasPrefix(m.Args[0], ":.") {
@@ -142,57 +105,57 @@ func InteractiveCommands(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 // 	}
 // }
 
-const (
-	gitlabUrl string = "gitlab.gigx.be/api/v3/projects/:id/repository/commits"
-)
+// const (
+// 	gitlabUrl string = "gitlab.gigx.be/api/v3/projects/:id/repository/commits"
+// )
 
-func GoDock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+// func GoDock(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
-	// if m.Args[0] == ":.doc" {
+// if m.Args[0] == ":.doc" {
 
-	// 	client := http.Client{}
-	// 	req, err := http.NewRequest("GET", "http://godoc.org/?q=sql", nil)
-	// 	if err != nil {
-	// 		b.Error <- err
-	// 	}
-	// 	req.Header.Add("Accept", "text/plain")
-	// 	resp, err := client.Do(req)
-	// 	// resp, err := http.Get("http://godoc.org/?q=sql")
-	// 	if err != nil {
-	// 		b.Error <- err
-	// 		return
-	// 	}
-	// 	defer resp.Body.Close()
+// 	client := http.Client{}
+// 	req, err := http.NewRequest("GET", "http://godoc.org/?q=sql", nil)
+// 	if err != nil {
+// 		b.Error <- err
+// 	}
+// 	req.Header.Add("Accept", "text/plain")
+// 	resp, err := client.Do(req)
+// 	// resp, err := http.Get("http://godoc.org/?q=sql")
+// 	if err != nil {
+// 		b.Error <- err
+// 		return
+// 	}
+// 	defer resp.Body.Close()
 
-	// 	m.Command = "PRIVMSG"
-	// 	if resp.StatusCode != 200 {
-	// 		m.Args = []string{":Pas de correpondance"}
-	// 	} else {
-	// 		//convert body to string
-	// 		// buf := new(bytes.Buffer)
-	// 		// buf.ReadFrom(resp.Body)
-	// 		// s := buf.String()
-	// 		scanner := bufio.NewScanner(resp.Body)
-	// 		scanner.Split(bufio.ScanWords)
+// 	m.Command = "PRIVMSG"
+// 	if resp.StatusCode != 200 {
+// 		m.Args = []string{":Pas de correpondance"}
+// 	} else {
+// 		//convert body to string
+// 		// buf := new(bytes.Buffer)
+// 		// buf.ReadFrom(resp.Body)
+// 		// s := buf.String()
+// 		scanner := bufio.NewScanner(resp.Body)
+// 		scanner.Split(bufio.ScanWords)
 
-	// 		var documentation string
-	// 		for scanner.Scan() {
-	// 			w := scanner.Text()
-	// 			last := w
-	// 			if w == m.Args[1] {
-	// 				documentation += last
-	// 				scanner.Split(bufio.ScanBytes)
-	// 				by := scanner.Bytes()
-	// 				for by != "\n" {
-	// 					documentation += by
-	// 				}
-	// 				break
-	// 			}
-	// 		}
+// 		var documentation string
+// 		for scanner.Scan() {
+// 			w := scanner.Text()
+// 			last := w
+// 			if w == m.Args[1] {
+// 				documentation += last
+// 				scanner.Split(bufio.ScanBytes)
+// 				by := scanner.Bytes()
+// 				for by != "\n" {
+// 					documentation += by
+// 				}
+// 				break
+// 			}
+// 		}
 
-	// 		m.Args = []string{fmt.Sprintf(":%s", s)}
-	// 	}
+// 		m.Args = []string{fmt.Sprintf(":%s", s)}
+// 	}
 
-	// 	b.Out <- m
-	// }
-}
+// 	b.Out <- m
+// }
+// }
