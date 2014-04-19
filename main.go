@@ -75,13 +75,7 @@ func main() {
 	b.AddInternAction(&actions.Respond{})
 
 	//command fire by users
-	// b.AddUserAction("PRIVMSG", actions.InteractiveCommands)
 	b.AddUserAction(&actions.Help{})
-
-	fmt.Println(b.HandlersIntern)
-	fmt.Println(b.HandlersUser)
-	//launch a go routine that check for found blocks
-	// actions.FindBlock(b)
 
 	//connectin to server, listen and serve
 	b.Connect()
