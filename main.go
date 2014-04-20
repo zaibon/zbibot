@@ -73,9 +73,12 @@ func main() {
 	//set channels
 	b.AddInternAction(&actions.Greet{})
 	b.AddInternAction(&actions.Respond{})
+	b.AddInternAction(&actions.TitleExtract{})
 
 	//command fire by users
 	b.AddUserAction(&actions.Help{})
+
+	go actions.Mintpal(b)
 
 	//connectin to server, listen and serve
 	b.Connect()
