@@ -4,9 +4,14 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/Zaibon/ircbot"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 type Respond struct{}
 

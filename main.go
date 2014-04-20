@@ -70,13 +70,14 @@ func main() {
 	b.WebEnable = flagWebEnable
 	b.WebPort = flagWebPort
 
-	//set channels
+	//set internal command
 	b.AddInternAction(&actions.Greet{})
 	b.AddInternAction(&actions.Respond{})
 	b.AddInternAction(&actions.TitleExtract{})
 
 	//command fire by users
 	b.AddUserAction(&actions.Help{})
+	b.AddUserAction(&actions.Ping{})
 
 	go actions.Mintpal(b)
 
