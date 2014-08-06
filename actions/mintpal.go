@@ -16,7 +16,7 @@ func Mintpal(bot *ircbot.IrcBot) {
 	threshold := -50.0
 
 	for {
-		time.Sleep(2 * time.Minute)
+		time.Sleep(10 * time.Minute)
 
 		resp, err := http.Get("https://api.mintpal.com/v1/market/summary")
 		if err != nil {
@@ -40,7 +40,7 @@ func Mintpal(bot *ircbot.IrcBot) {
 			}
 
 			if change <= threshold {
-				output := fmt.Sprintf("gros mouvement sur le %s !! %f %% last price %s\n", v["code"], change, v["last_price"])
+				output := fmt.Sprintf("gros mouvement sur le %s !! %f%% last price %s\n", v["code"], change, v["last_price"])
 				bot.Say("#laminerie", output)
 			}
 		}
