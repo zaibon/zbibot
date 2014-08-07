@@ -80,6 +80,7 @@ func main() {
 
 	//command fire by users
 	b.AddUserAction(&actions.Help{})
+	b.AddUserAction(&actions.ShowSummary{})
 
 	//connectin to server, listen and serve
 	b.Connect()
