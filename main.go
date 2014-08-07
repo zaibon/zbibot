@@ -60,29 +60,18 @@ func main() {
 		flagPort = "6667"
 	}
 
-	//create new bot
-	b := ircbot.NewIrcBot()
-
-	//configure bot
-	b.Server = flagServer
-	b.Port = flagPort
-	b.Encrypted = flagSsl
-	b.Nick = flagNick
-	b.User = b.Nick
+	ch := channels{}
 	if flag.NFlag() != 0 {
 		for i := 0; i < len(flagChannels); i++ {
-			b.Channel = append(b.Channel, flagChannels[i])
+			ch = append(ch, flagChannels[i])
 		}
 	}
-	b.WebEnable = flagWebEnable
-	b.WebPort = flagWebPort
+	//create new bot
+	b := ircbot.NewIrcBot(flagNick, flagNick, flagPassword, flagServer, flagPort, ch)
 
 	//set channels
 	b.AddInternAction(&actions.Greet{})
 	b.AddInternAction(&actions.TitleExtract{})
-
-	//command fire by users
-	b.AddUserAction(&actions.Help{})
 
 	//connectin to server, listen and serve
 	b.Connect()
