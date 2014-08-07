@@ -39,30 +39,33 @@ func do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 			continue
 		}
 
-		resp, err := http.Get(u.String())
-		if err != nil {
-			fmt.Println("err get url: ", err)
-			continue
-		}
+		go func() {
 
-		contentType := resp.Header.Get("Content-Type")
-
-		switch {
-		case strings.Contains(contentType, "text/html"):
-			doc, err := html.Parse(resp.Body)
-			resp.Body.Close()
+			resp, err := http.Get(u.String())
 			if err != nil {
-				fmt.Println("err Parse page : ", err)
-				continue
+				fmt.Println("err get url: ", err)
+				return
 			}
-			title := extractTitle(doc)
-			fmt.Println("extract title : ", title)
-			if title != "" {
-				b.Say(m.Channel, title)
+
+			contentType := resp.Header.Get("Content-Type")
+
+			switch {
+			case strings.Contains(contentType, "text/html"):
+				doc, err := html.Parse(resp.Body)
+				resp.Body.Close()
+				if err != nil {
+					fmt.Println("err Parse page : ", err)
+					return
+				}
+				title := extractTitle(doc)
+				fmt.Println("extract title : ", title)
+				if title != "" {
+					b.Say(m.Channel, title)
+				}
+			default:
+				fmt.Println("mime not supported")
 			}
-		default:
-			fmt.Println("mime not supported")
-		}
+		}()
 	}
 }
 
