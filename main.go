@@ -76,7 +76,6 @@ func main() {
 
 	//set channels
 	b.AddInternAction(&actions.Greet{})
-	b.AddInternAction(&actions.Respond{})
 
 	//command fire by users
 	b.AddUserAction(&actions.Help{})
