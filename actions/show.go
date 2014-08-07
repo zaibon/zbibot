@@ -103,7 +103,7 @@ func (s *ShowSummary) Usage() string {
 
 func (s *ShowSummary) Do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	if len(m.Args) < 2 {
-		b.Say(m.Channel, "et si tu me donnais le titer du show ?")
+		b.Say(m.Channel, "et si tu me donnais le titre du show ?")
 		return
 	}
 
