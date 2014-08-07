@@ -26,7 +26,8 @@ var (
 	flagSsl      bool
 	flagChannels channels
 
-	flagNick string
+	flagNick     string
+	flagPassword string
 
 	flagWebEnable bool
 	flagWebPort   string
@@ -44,6 +45,8 @@ func init() {
 	flag.StringVar(&flagNick, "nick", "ZbiBot", "nickname")
 	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
 
+	flag.StringVar(&flagPassword, "password", "", "password")
+
 	flag.BoolVar(&flagWebEnable, "web", false, "enable or not the web interface true|false")
 	flag.StringVar(&flagWebPort, "wport", "3000", "port on wich to bind web interface")
 }
@@ -57,22 +60,14 @@ func main() {
 		flagPort = "6667"
 	}
 
-	//create new bot
-	b := ircbot.NewIrcBot()
-
-	//configure bot
-	b.Server = flagServer
-	b.Port = flagPort
-	b.Encrypted = flagSsl
-	b.Nick = flagNick
-	b.User = b.Nick
+	ch := channels{}
 	if flag.NFlag() != 0 {
 		for i := 0; i < len(flagChannels); i++ {
-			b.Channel = append(b.Channel, flagChannels[i])
+			ch = append(ch, flagChannels[i])
 		}
 	}
-	b.WebEnable = flagWebEnable
-	b.WebPort = flagWebPort
+	//create new bot
+	b := ircbot.NewIrcBot(flagNick, flagNick, flagPassword, flagServer, flagPort, ch)
 
 	//set channels
 	b.AddInternAction(&actions.Greet{})
