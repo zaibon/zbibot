@@ -26,7 +26,8 @@ var (
 	flagSsl      bool
 	flagChannels channels
 
-	flagNick string
+	flagNick     string
+	flagPassword string
 
 	flagWebEnable bool
 	flagWebPort   string
@@ -43,6 +44,8 @@ func init() {
 
 	flag.StringVar(&flagNick, "nick", "ZbiBot", "nickname")
 	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
+
+	flag.StringVar(&flagPassword, "password", "", "password")
 
 	flag.BoolVar(&flagWebEnable, "web", false, "enable or not the web interface true|false")
 	flag.StringVar(&flagWebPort, "wport", "3000", "port on wich to bind web interface")
