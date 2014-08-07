@@ -31,8 +31,8 @@ func (t *Ticker) Do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		b.Say(m.Channel, "il me manque des infos")
 		return
 	}
-	exchange := m.Args[1]
-	currency := m.Args[2]
+	// exchange := m.Args[1]
+	// currency := m.Args[2]
 
 }
 

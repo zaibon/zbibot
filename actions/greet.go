@@ -18,12 +18,11 @@ func (g *Greet) Usage() string {
 
 func (g *Greet) Do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	if m.Nick == b.Nick {
-		b.Joined = true
 		return
 	}
 
 	s := fmt.Sprintf("%s :Salut %s", m.Channel, m.Nick)
-	b.Out <- &ircbot.IrcMsg{
+	b.ChOut <- &ircbot.IrcMsg{
 		Command: "PRIVMSG",
 		Args:    []string{s},
 	}

@@ -26,7 +26,8 @@ var (
 	flagSsl      bool
 	flagChannels channels
 
-	flagNick string
+	flagNick     string
+	flagPassword string
 
 	flagWebEnable bool
 	flagWebPort   string
@@ -44,8 +45,10 @@ func init() {
 	flag.StringVar(&flagNick, "nick", "ZbiBot", "nickname")
 	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
 
+	flag.StringVar(&flagPassword, "password", "", "password")
+
 	flag.BoolVar(&flagWebEnable, "web", false, "enable or not the web interface true|false")
-	flag.StringVar(&flagWebPort, "wport", "6697", "port on wich to bind web interface")
+	flag.StringVar(&flagWebPort, "wport", "3000", "port on wich to bind web interface")
 }
 
 func main() {
@@ -53,22 +56,18 @@ func main() {
 
 	flag.Parse()
 
-	//create new bot
-	b := ircbot.NewIrcBot()
+	if !flagSsl {
+		flagPort = "6667"
+	}
 
-	//configure bot
-	b.Server = flagServer
-	b.Port = flagPort
-	b.Encrypted = flagSsl
-	b.Nick = flagNick
-	b.User = b.Nick
+	ch := channels{}
 	if flag.NFlag() != 0 {
 		for i := 0; i < len(flagChannels); i++ {
-			b.Channel = append(b.Channel, flagChannels[i])
+			ch = append(ch, flagChannels[i])
 		}
 	}
-	b.WebEnable = flagWebEnable
-	b.WebPort = flagWebPort
+	//create new bot
+	b := ircbot.NewIrcBot(flagNick, flagNick, flagPassword, flagServer, flagPort, ch)
 
 	//set internal command
 	b.AddInternAction(&actions.Greet{})
@@ -76,7 +75,6 @@ func main() {
 	b.AddInternAction(&actions.TitleExtract{})
 
 	//command fire by users
-	b.AddUserAction(&actions.Help{})
 	b.AddUserAction(&actions.Ping{})
 
 	go actions.Mintpal(b)

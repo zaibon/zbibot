@@ -35,7 +35,7 @@ func (r *Respond) Do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	if strings.Contains(s, b.Nick) {
 		nbr := rand.Intn(len(response))
 		line := fmt.Sprintf(":%s", response[nbr])
-		b.Out <- &ircbot.IrcMsg{
+		b.ChOut <- &ircbot.IrcMsg{
 			Command: "PRIVMSG",
 			Channel: m.Channel,
 			Args:    []string{line},
