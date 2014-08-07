@@ -45,13 +45,17 @@ func init() {
 	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
 
 	flag.BoolVar(&flagWebEnable, "web", false, "enable or not the web interface true|false")
-	flag.StringVar(&flagWebPort, "wport", "6697", "port on wich to bind web interface")
+	flag.StringVar(&flagWebPort, "wport", "3000", "port on wich to bind web interface")
 }
 
 func main() {
 	flag.Var(&flagChannels, "c", "channels")
 
 	flag.Parse()
+
+	if !flagSsl {
+		flagPort = "6667"
+	}
 
 	//create new bot
 	b := ircbot.NewIrcBot()
