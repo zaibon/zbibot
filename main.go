@@ -37,10 +37,10 @@ func init() {
 	flag.StringVar(&flagServer, "server", "irc.freenode.net", "ip adresse of the server you want to connect to")
 	flag.StringVar(&flagServer, "s", "irc.freenode.net", "ip adresse of the server you want to connect to")
 
-	flag.StringVar(&flagPort, "port", "6697", "port")
-	flag.StringVar(&flagPort, "p", "6697", "port")
+	flag.StringVar(&flagPort, "port", "6667", "port")
+	flag.StringVar(&flagPort, "p", "6667", "port")
 
-	flag.BoolVar(&flagSsl, "ssl", true, "true|false")
+	flag.BoolVar(&flagSsl, "ssl", false, "true|false")
 
 	flag.StringVar(&flagNick, "nick", "ZbiBot", "nickname")
 	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
@@ -56,8 +56,8 @@ func main() {
 
 	flag.Parse()
 
-	if !flagSsl {
-		flagPort = "6667"
+	if flagSsl {
+		flagPort = "6697"
 	}
 
 	ch := channels{}
