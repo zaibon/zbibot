@@ -75,6 +75,7 @@ func main() {
 
 	//command fire by users
 	b.AddUserAction(&actions.ShowSummary{})
+	b.AddUserAction(&actions.LetMeKnow{})
 
 	//connectin to server, listen and serve
 	b.Connect()
