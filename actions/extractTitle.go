@@ -43,7 +43,6 @@ func do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 			resp, err := http.Get(u.String())
 			if err != nil {
-				fmt.Println("err get url: ", err)
 				return
 			}
 
@@ -54,7 +53,6 @@ func do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 				doc, err := html.Parse(resp.Body)
 				resp.Body.Close()
 				if err != nil {
-					fmt.Println("err Parse page : ", err)
 					return
 				}
 				title := extractTitle(doc)
