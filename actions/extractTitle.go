@@ -2,6 +2,7 @@ package actions
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -26,13 +27,13 @@ func (u *TitleExtract) Usage() string {
 }
 
 func (u *TitleExtract) Do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
+	fmt.Println("INFO : start extractTitle")
 	do(b, m)
 }
 
 func do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	m.Args[0] = strings.TrimPrefix(m.Args[0], ":")
-	for _, word := range m.Args {
-		fmt.Println(word)
+	for _, word := range m.Trailing {
+
 		u, err := url.Parse(word)
 		if err != nil {
 			fmt.Println("err parse url: ", err)
@@ -40,49 +41,51 @@ func do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 		}
 
 		go func() {
-
-			resp, err := http.Get(u.String())
+			title, err := extractTitle(u.String())
 			if err != nil {
-				return
+				b.Say(m.Channel(), err.Error())
 			}
-
-			contentType := resp.Header.Get("Content-Type")
-
-			switch {
-			case strings.Contains(contentType, "text/html"):
-				doc, err := html.Parse(resp.Body)
-				resp.Body.Close()
-				if err != nil {
-					return
-				}
-				title := extractTitle(doc)
-				fmt.Println("extract title : ", title)
-				if title != "" {
-					b.Say(m.Channel, title)
-				}
-			default:
-				fmt.Println("mime not supported")
-			}
+			b.Say(m.Channel(), title)
 		}()
 	}
 }
 
-func extractTitle(n *html.Node) string {
-	var curr *html.Node
-	var title string
-	curr = n
-	for curr != nil {
-		if curr.Data == "title" {
-			if curr.FirstChild != nil {
-				title = curr.FirstChild.Data
-				break
-			}
+func extractTitle(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+
+	switch {
+	case strings.Contains(contentType, "text/html"):
+		return parseHTML(resp.Body)
+	default:
+		return "", fmt.Errorf("mime not supported")
+	}
+}
+
+func parseHTML(r io.Reader) (string, error) {
+	doc, err := html.Parse(r)
+	if err != nil {
+		return "", err
+	}
+	title := ""
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "title" {
+			title = n.FirstChild.Data
+			return
 		}
-		if curr.FirstChild != nil {
-			curr = curr.FirstChild
-		} else {
-			curr = curr.NextSibling
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
 		}
 	}
-	return title
+	f(doc)
+	if title != "" {
+		return title, nil
+	}
+	return "", fmt.Errorf("no title")
 }
