@@ -24,109 +24,60 @@ func (l *LetMeKnow) Usage() string {
 }
 
 func (l *LetMeKnow) Do(b *ircbot.IrcBot, msg *ircbot.IrcMsg) {
-	if len(msg.Args) < 2 {
-		b.Say(msg.Channel, "quelle commande?")
+	if len(msg.Trailing) < 2 {
+		b.Say(msg.Channel(), "list | search :title | ep :season :episode :title | add :title")
 		return
 	}
 
-	cmd := msg.Args[1]
-	apiResp := &APIResp{}
+	cmd := msg.Trailing[1]
 	switch cmd {
 	case "list":
-		url := apiRoot + "shows/list"
-		resp, err := http.Get(url)
-		if err != nil {
-			fmt.Println("error : ", err)
-			return
-		}
-		defer resp.Body.Close()
-
-		if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-			fmt.Println("list error : ", err)
-			return
-		}
-		if err := checkApiRespError(apiResp, b, msg); err != nil {
-			return
-		}
-
-		if apiResp.Status == "ok" {
-			shows := showsList{}
-			if err := json.Unmarshal(apiResp.Payload, &shows); err != nil {
-				fmt.Println("list error :", err)
-				return
-			}
-			for _, title := range shows {
-				b.Say(msg.Channel, title.Title)
-			}
-		}
+		doShowsList(b, msg)
 
 	case "search":
-		if len(msg.Args) < 3 {
-			b.Say(msg.Channel, "que cherche tu ?")
-			return
-		}
-		url := apiRoot + "shows/search/" + strings.Join(msg.Args[2:], " ")
-		resp, err := http.Get(url)
-		if err != nil {
-			fmt.Println("search error get :", err)
-			return
-		}
-		defer resp.Body.Close()
+		doShowsSearch(b, msg)
 
-		if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-			fmt.Println("search error decode :", err)
-			return
-		}
-
-		if err := checkApiRespError(apiResp, b, msg); err != nil {
-			return
-		}
-
-		if apiResp.Status == "ok" {
-			resp := showsSearchResp{}
-			if err := json.Unmarshal(apiResp.Payload, &resp); err != nil {
-				fmt.Println("search decode error :", err)
-				return
-			}
-
-			for _, show := range resp {
-				b.Say(msg.Channel, fmt.Sprintf("title : %s", show.Title))
-				b.Say(msg.Channel, fmt.Sprintf("Overview : %s", show.Overview))
-			}
-		}
+	case "ep":
+		doShowsSearchEp(b, msg)
 
 	case "add":
-		if len(msg.Args) < 3 {
-			b.Say(msg.Channel, "donne le nom de la série")
-			return
-		}
-		url := apiRoot + "shows/add/" + strings.Join(msg.Args[2:], "-")
-		resp, err := http.Post(url, "text/html", nil)
-		if err != nil {
-			fmt.Println("error post: ", err)
-			return
-		}
-		defer resp.Body.Close()
-
-		if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-			fmt.Println("error decoding : ", err)
-			return
-		}
-
-		if err := checkApiRespError(apiResp, b, msg); err != nil {
-			fmt.Println("error decode :", err)
-			return
-		}
-
-		if apiResp.Status == "ok" {
-			var addMsg string
-			if err := json.Unmarshal(apiResp.Payload, &addMsg); err != nil {
-				fmt.Println("error decode : ", err)
-				return
-			}
-			b.Say(msg.Channel, addMsg)
-		}
+		doShowsAdd(b, msg)
 	}
+}
+
+func doShowsAdd(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
+	if len(msg.Trailing) < 3 {
+		b.Say(msg.Channel(), "donne le nom de la série")
+		return nil
+	}
+	url := apiRoot + "shows/add/" + strings.Join(msg.Trailing[2:], "-")
+	resp, err := http.Post(url, "text/html", nil)
+	if err != nil {
+		fmt.Println("error post: ", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		fmt.Println("error decoding : ", err)
+		return err
+	}
+
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		fmt.Println("error decode :", err)
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		var addMsg string
+		if err := json.Unmarshal(apiResp.Payload, &addMsg); err != nil {
+			fmt.Println("error decode : ", err)
+			return err
+		}
+		b.Say(msg.Channel(), addMsg)
+	}
+	return nil
 }
 
 type APIResp struct {
@@ -136,6 +87,37 @@ type APIResp struct {
 
 type showsList []struct {
 	Title string `json:"title"`
+}
+
+func doShowsList(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
+	url := apiRoot + "shows/list"
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("error : ", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
+		fmt.Println("list error : ", err)
+		return err
+	}
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		shows := showsList{}
+		if err := json.Unmarshal(apiResp.Payload, &shows); err != nil {
+			fmt.Println("list error :", err)
+			return err
+		}
+		for _, title := range shows {
+			b.Say(msg.Channel(), title.Title)
+		}
+	}
+	return nil
 }
 
 type showsSearchResp []struct {
@@ -152,9 +134,47 @@ type showsSearchResp []struct {
 	UpdatedAt string  `json:"updated_at"`
 }
 
-type showsEp struct {
+func doShowsSearch(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
+	if len(msg.Trailing) < 3 {
+		b.Say(msg.Channel(), "que cherche tu ?")
+		return nil
+	}
+	url := apiRoot + "shows/search/" + strings.Join(msg.Trailing[2:], " ")
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("search error get :", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
+		fmt.Println("search error decode :", err)
+		return err
+	}
+
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		resp := showsSearchResp{}
+		if err := json.Unmarshal(apiResp.Payload, &resp); err != nil {
+			fmt.Println("search decode error :", err)
+			return err
+		}
+
+		for _, show := range resp {
+			b.Say(msg.Channel(), fmt.Sprintf("title : %s", show.Title))
+			b.Say(msg.Channel(), fmt.Sprintf("Overview : %s", show.Overview))
+		}
+	}
+	return nil
+}
+
+type showsSearchEpResp struct {
 	ID struct {
-		ID string `json:"$oid"`
+		_Oid string `json:"$oid"`
 	} `json:"_id"`
 	CreatedAt   string      `json:"created_at"`
 	DownloadURL interface{} `json:"download_url"`
@@ -164,10 +184,52 @@ type showsEp struct {
 	ReleasedOn  string      `json:"released_on"`
 	Season      float64     `json:"season"`
 	ShowID      struct {
-		ID string `json:"$oid"`
+		_Oid string `json:"$oid"`
 	} `json:"show_id"`
 	Title     string `json:"title"`
 	UpdatedAt string `json:"updated_at"`
+}
+
+func doShowsSearchEp(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
+	if len(msg.Trailing) < 5 {
+		b.Say(msg.Channel(), "pas assez de paramètres")
+		return nil
+	}
+	season := msg.Trailing[2]
+	number := msg.Trailing[3]
+	title := strings.Join(msg.Trailing[4:], "-")
+	url := fmt.Sprintf("%s%s/%s/%s/%s/%s", apiRoot, "shows/search", title, "episodes", season, number)
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("search error get :", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
+		fmt.Println("search error decode :", err)
+		return err
+	}
+
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		resp := showsSearchEpResp{}
+		if err := json.Unmarshal(apiResp.Payload, &resp); err != nil {
+			fmt.Println("search decode error :", err)
+			return err
+		}
+
+		b.Say(msg.Channel(), fmt.Sprintf("title : %s", resp.Title))
+		b.Say(msg.Channel(), fmt.Sprintf("Season : %.0f", resp.Season))
+		b.Say(msg.Channel(), fmt.Sprintf("Episode : %.0f", resp.Number))
+		b.Say(msg.Channel(), fmt.Sprintf("Overview : %s", resp.Overview))
+
+	}
+	return nil
 }
 
 func checkApiRespError(apiResp *APIResp, b *ircbot.IrcBot, m *ircbot.IrcMsg) error {
@@ -177,7 +239,7 @@ func checkApiRespError(apiResp *APIResp, b *ircbot.IrcBot, m *ircbot.IrcMsg) err
 			fmt.Println("error decode :", err)
 			return err
 		}
-		b.Say(m.Channel, errMsg)
+		b.Say(m.Channel(), errMsg)
 	}
 	return nil
 }

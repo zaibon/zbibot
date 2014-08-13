@@ -17,13 +17,9 @@ func (g *Greet) Usage() string {
 }
 
 func (g *Greet) Do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
-	if m.Nick == b.Nick {
+	if m.Nick() == b.Nick {
 		return
 	}
 
-	s := fmt.Sprintf("%s :Salut %s", m.Channel, m.Nick)
-	b.ChOut <- &ircbot.IrcMsg{
-		Command: "PRIVMSG",
-		Args:    []string{s},
-	}
+	b.Say(m.Channel(), fmt.Sprintf("Salut %s", m.Nick()))
 }

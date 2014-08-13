@@ -74,13 +74,13 @@ func main() {
 	b.AddInternAction(&actions.TitleExtract{})
 
 	//command fire by users
-	b.AddUserAction(&actions.ShowSummary{})
+	b.AddUserAction(&actions.Help{})
 	b.AddUserAction(&actions.LetMeKnow{})
 
 	//connectin to server, listen and serve
 	b.Connect()
 
-	//TODO handle signal system to throw something in b.Exit
+	// //TODO handle signal system to throw something in b.Exit
 	<-b.Exit
 	//and then disconenct
 	b.Disconnect()
