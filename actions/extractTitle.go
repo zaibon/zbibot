@@ -34,6 +34,10 @@ func (u *TitleExtract) Do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 func do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 	for _, word := range m.Trailing {
 
+		if !strings.Contains(word, "http") {
+			continue
+		}
+
 		u, err := url.Parse(word)
 		if err != nil {
 			fmt.Println("err parse url: ", err)
@@ -42,10 +46,9 @@ func do(b *ircbot.IrcBot, m *ircbot.IrcMsg) {
 
 		go func() {
 			title, err := extractTitle(u.String())
-			if err != nil {
-				b.Say(m.Channel(), err.Error())
+			if err == nil {
+				b.Say(m.Channel(), title)
 			}
-			b.Say(m.Channel(), title)
 		}()
 	}
 }
