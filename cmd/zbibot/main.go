@@ -75,6 +75,7 @@ func main() {
 
 	b.AddInternAction(&actions.Greet{})
 	b.AddInternAction(&actions.TitleExtract{})
+	b.AddInternAction(actions.NewLogger(b))
 
 	//command fire by users
 	b.AddUserAction(&actions.Help{})
