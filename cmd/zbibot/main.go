@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Zaibon/ircbot"
-	"github.com/Zaibon/zbibot/actions"
+	"github.com/Zaibon/ircbot/actions"
 )
 
 //needed for the flag "channel"
@@ -31,16 +31,18 @@ var (
 
 	flagWebEnable bool
 	flagWebPort   string
+
+	flagDBPath string
 )
 
 func init() {
 	flag.StringVar(&flagServer, "server", "irc.freenode.net", "ip adresse of the server you want to connect to")
 	flag.StringVar(&flagServer, "s", "irc.freenode.net", "ip adresse of the server you want to connect to")
 
-	flag.StringVar(&flagPort, "port", "6697", "port")
-	flag.StringVar(&flagPort, "p", "6697", "port")
+	flag.StringVar(&flagPort, "port", "6667", "port")
+	flag.StringVar(&flagPort, "p", "6667", "port")
 
-	flag.BoolVar(&flagSsl, "ssl", true, "true|false")
+	flag.BoolVar(&flagSsl, "ssl", false, "true|false")
 
 	flag.StringVar(&flagNick, "nick", "ZbiBot", "nickname")
 	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
@@ -49,6 +51,8 @@ func init() {
 
 	flag.BoolVar(&flagWebEnable, "web", false, "enable or not the web interface true|false")
 	flag.StringVar(&flagWebPort, "wport", "3000", "port on wich to bind web interface")
+
+	flag.StringVar(&flagDBPath, "db", "irc.db", "path to the sqlite3 database")
 }
 
 func main() {
@@ -56,8 +60,8 @@ func main() {
 
 	flag.Parse()
 
-	if !flagSsl {
-		flagPort = "6667"
+	if flagSsl {
+		flagPort = "6697"
 	}
 
 	ch := channels{}
@@ -67,7 +71,7 @@ func main() {
 		}
 	}
 	//create new bot
-	b := ircbot.NewIrcBot(flagNick, flagNick, flagPassword, flagServer, flagPort, ch)
+	b := ircbot.NewIrcBot(flagNick, flagNick, flagPassword, flagServer, flagPort, ch, flagDBPath)
 
 	//set internal command
 	b.AddInternAction(&actions.Greet{})
@@ -76,13 +80,12 @@ func main() {
 
 	//command fire by users
 	b.AddUserAction(&actions.Ping{})
-
-	go actions.Mintpal(b)
+	b.AddUserAction(&actions.Help{})
 
 	//connectin to server, listen and serve
 	b.Connect()
 
-	//TODO handle signal system to throw something in b.Exit
+	// //TODO handle signal system to throw something in b.Exit
 	<-b.Exit
 	//and then disconenct
 	b.Disconnect()
