@@ -6,7 +6,6 @@ import (
 
 	"github.com/Zaibon/ircbot"
 	"github.com/Zaibon/ircbot/actions"
-	"github.com/Zaibon/zbibot"
 )
 
 //needed for the flag "channel"
@@ -79,8 +78,6 @@ func main() {
 
 	//command fire by users
 	b.AddUserAction(&actions.Help{})
-	b.AddUserAction(zbibot.NewLetMeKnow(b))
-	// b.AddUserAction(action.NewURL(b))
 
 	//connectin to server, listen and serve
 	b.Connect()
