@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	apiRoot = "http://lmk.zaibon.be/"
+	apiRoot = "http://lmk.hito.be/"
 )
 
 // var tokens map[string]string
@@ -308,8 +308,8 @@ func (l *LetMeKnow) doUsersSignUp(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 	username := msg.Trailing[3]
 	password := msg.Trailing[4]
 
-	url := fmt.Sprintf("%s%s?mail=%s&username=%s&password=%s", apiRoot, "users/sign_up", mail, username, password)
-	resp, err := http.Post(url, "application/json", nil)
+	url := fmt.Sprintf("%s%s?email=%s&username=%s&password=%s", apiRoot, "users/sign_up", mail, username, password)
+	resp, err := http.Post(url, "text/html", nil)
 	if err != nil {
 		fmt.Println("sign_up error get :", err)
 		return err
