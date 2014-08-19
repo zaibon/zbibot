@@ -62,7 +62,7 @@ func (l *LetMeKnow) Do(b *ircbot.IrcBot, msg *ircbot.IrcMsg) {
 		b.Say(msg.Channel(), "shows cmd:")
 		b.Say(msg.Channel(), "list | search :title | ep :season :episode :title | add :title")
 		b.Say(msg.Channel(), "users cmd:")
-		b.Say(msg.Channel(), "sign_up :mail :username :password | sign_in :username :password")
+		b.Say(msg.Channel(), "signup :mail :username :password | signin :username :password")
 
 		return
 	}
