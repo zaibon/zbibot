@@ -422,5 +422,10 @@ func (l *LetMeKnow) getToken(prefix string) (string, error) {
 	if err == nil {
 		l.tokens[prefix] = token
 	}
+
+	if err := stmt.Close(); err != nil {
+		fmt.Printf("ERROR close statement query : %s\n", err)
+		return "", err
+	}
 	return token, nil
 }
