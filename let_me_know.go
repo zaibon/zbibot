@@ -69,9 +69,9 @@ func (l *LetMeKnow) Usage() string {
 func (l *LetMeKnow) Do(b *ircbot.IrcBot, msg *ircbot.IrcMsg) {
 	if len(msg.Trailing) < 2 {
 		b.Say(msg.Channel(), "shows cmd:")
-		b.Say(msg.Channel(), "list | search :title | ep :season :episode :title | add :title")
+		b.Say(msg.Channel(), "list | search :title | ep :season :episode :title | add :title | follow :title | unfollow :title | followed ")
 		b.Say(msg.Channel(), "users cmd:")
-		b.Say(msg.Channel(), "signup :mail :username :password | signin :username :password")
+		b.Say(msg.Channel(), "signup :mail :username :password | signin :username :password | lost :email")
 
 		return
 	}
@@ -107,6 +107,18 @@ func (l *LetMeKnow) Do(b *ircbot.IrcBot, msg *ircbot.IrcMsg) {
 	case "add":
 		l.doShowsAdd(b, msg, token)
 
+	case "follow":
+		l.doFollowShow(b, msg, token)
+
+	case "unfollow":
+		l.doUnfollowShow(b, msg, token)
+
+	case "followed":
+		l.doUsersFollowed(b, msg, token)
+
+	case "lost":
+		l.doLostPassword(b, msg, token)
+
 	case "signup":
 		l.doUsersSignUp(b, msg)
 
@@ -128,7 +140,7 @@ func (l *LetMeKnow) doShowsAdd(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token strin
 
 	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
 	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "shows/add", title, token)
-	resp, err := http.Post(apiURL, "text/html", nil)
+	resp, err := l.client.Post(apiURL, "text/html", nil)
 	if err != nil {
 		fmt.Println("error post: ", err)
 		return err
@@ -163,7 +175,7 @@ type showsList []struct {
 
 func (l *LetMeKnow) doShowsList(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
 	url := fmt.Sprintf("%s%s?token=%s", apiRoot, "shows/list", token)
-	resp, err := http.Get(url)
+	resp, err := l.client.Get(url)
 	if err != nil {
 		fmt.Println("error : ", err)
 		return err
@@ -214,7 +226,7 @@ func (l *LetMeKnow) doShowsSearch(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token st
 
 	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
 	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "shows/search", title, token)
-	resp, err := http.Get(apiURL)
+	resp, err := l.client.Get(apiURL)
 	if err != nil {
 		fmt.Println("search error get :", err)
 		return err
@@ -274,7 +286,7 @@ func (l *LetMeKnow) doShowsSearchEp(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token 
 	number := msg.Trailing[3]
 	title := url.QueryEscape(strings.Join(msg.Trailing[4:], " "))
 	apiURL := fmt.Sprintf("%s%s/%s/%s/%s/%s?token=%s", apiRoot, "shows/search", title, "episodes", season, number, token)
-	resp, err := http.Get(apiURL)
+	resp, err := l.client.Get(apiURL)
 	if err != nil {
 		fmt.Println("search error get :", err)
 		return err
@@ -318,7 +330,7 @@ func (l *LetMeKnow) doUsersSignUp(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 	password := msg.Trailing[4]
 
 	url := fmt.Sprintf("%s%s?email=%s&username=%s&password=%s", apiRoot, "users/sign_up", mail, username, password)
-	resp, err := http.Post(url, "text/html", nil)
+	resp, err := l.client.Post(url, "text/html", nil)
 	if err != nil {
 		fmt.Println("sign_up error get :", err)
 		return err
@@ -357,7 +369,7 @@ func (l *LetMeKnow) doUsersSignIn(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 
 	url := fmt.Sprintf("%s%s?username=%s&password=%s", apiRoot, "users/sign_in", username, password)
 	fmt.Println("DEBUG :", url)
-	resp, err := http.Get(url)
+	resp, err := l.client.Get(url)
 	if err != nil {
 		fmt.Println("sign_in error get :", err)
 		return err
@@ -381,7 +393,12 @@ func (l *LetMeKnow) doUsersSignIn(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 			return err
 		}
 
-		sql := "INSERT INTO lmk_tokens(prefix,token,timestamp) VALUES ($prefix,$token,$timestamp)"
+		//this is ugly...sorry
+		sql := "DELETE FROM lmk_tokens WHERE prefix=$prefix"
+		if err := l.dbConn.Exec(sql, msg.Prefix); err != nil {
+			b.Say(msg.Nick(), err.Error())
+		}
+		sql = "INSERT INTO lmk_tokens(prefix,token,timestamp) VALUES ($prefix,$token,$timestamp)"
 		if err := l.dbConn.Exec(sql, msg.Prefix, token, time.Now()); err != nil {
 			b.Say(msg.Nick(), err.Error())
 		}
@@ -390,6 +407,162 @@ func (l *LetMeKnow) doUsersSignIn(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 		l.tokens[msg.Prefix] = token
 		b.Say(msg.Channel(), "token send in query")
 		b.Say(msg.Nick(), fmt.Sprintf("your token : %s", token))
+	}
+	return nil
+}
+
+func (l *LetMeKnow) doFollowShow(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
+	if len(msg.Trailing) < 3 {
+		b.Say(msg.Channel(), "missing parameter")
+		return nil
+	}
+
+	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
+	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "users/follow", title, token)
+
+	resp, err := l.client.Post(apiURL, "text/html", nil)
+	if err != nil {
+		fmt.Println("error post: ", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		fmt.Println("error decoding : ", err)
+		return err
+	}
+
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		fmt.Println("error decode :", err)
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		var addMsg string
+		if err := json.Unmarshal(apiResp.Payload, &addMsg); err != nil {
+			fmt.Println("error decode : ", err)
+			return err
+		}
+		b.Say(msg.Channel(), addMsg)
+	}
+	return nil
+}
+
+func (l *LetMeKnow) doUnfollowShow(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
+	if len(msg.Trailing) < 3 {
+		b.Say(msg.Channel(), "missing parameter")
+		return nil
+	}
+
+	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
+	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "users/unfollow", title, token)
+
+	req, err := http.NewRequest("DELETE", apiURL, nil)
+	if err != nil {
+		fmt.Println("error get: ", err)
+		return err
+	}
+
+	resp, err := l.client.Do(req)
+	if err != nil {
+		fmt.Println("error get: ", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		fmt.Println("error decoding : ", err)
+		return err
+	}
+
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		fmt.Println("error decode :", err)
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		resp := ""
+		if err := json.Unmarshal(apiResp.Payload, &resp); err != nil {
+			fmt.Println("error decode : ", err)
+			return err
+		}
+
+		b.Say(msg.Channel(), resp)
+
+	}
+	return nil
+}
+
+type followed []struct {
+	Title string `json:"title"`
+}
+
+func (l *LetMeKnow) doUsersFollowed(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
+	url := fmt.Sprintf("%s%s?token=%s", apiRoot, "users/followed", token)
+	resp, err := l.client.Get(url)
+	if err != nil {
+		fmt.Println("error : ", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
+		fmt.Println("list error : ", err)
+		return err
+	}
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		shows := showsList{}
+		if err := json.Unmarshal(apiResp.Payload, &shows); err != nil {
+			fmt.Println("list error :", err)
+			return err
+		}
+		for _, title := range shows {
+			b.Say(msg.Channel(), title.Title)
+		}
+	}
+	return err
+}
+
+func (l *LetMeKnow) doLostPassword(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
+	if len(msg.Trailing) < 3 {
+		b.Say(msg.Channel(), "missing parameter")
+		return nil
+	}
+
+	email := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
+	apiURL := fmt.Sprintf("%s%s?email&token=%s", apiRoot, "users/forgot_password", email, token)
+	resp, err := l.client.Get(apiURL)
+	if err != nil {
+		fmt.Println("error post: ", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		fmt.Println("error decoding : ", err)
+		return err
+	}
+
+	if err := checkApiRespError(apiResp, b, msg); err != nil {
+		fmt.Println("error decode :", err)
+		return err
+	}
+
+	if apiResp.Status == "ok" {
+		var resp string
+		if err := json.Unmarshal(apiResp.Payload, &resp); err != nil {
+			fmt.Println("error decode : ", err)
+			return err
+		}
+		b.Say(msg.Channel(), resp)
 	}
 	return nil
 }
@@ -405,14 +578,6 @@ func checkApiRespError(apiResp *APIResp, b *ircbot.IrcBot, m *ircbot.IrcMsg) err
 	}
 	return nil
 }
-
-// func isAuthentificated(b *ircbot.IrcBot, msg *ircbot.IrcMsg) bool {
-// 	if _, ok := tokens[msg.Prefix]; !ok {
-// 		b.Say(msg.Channel(), "vous devez vous authentifier avant de faire cette commande")
-// 		return false
-// 	}
-// 	return true
-// }
 
 func (l *LetMeKnow) getToken(prefix string) (string, error) {
 	//test if token is in memory
