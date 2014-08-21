@@ -1,6 +1,7 @@
 package zbibot
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,13 +15,14 @@ import (
 )
 
 const (
-	apiRoot = "http://lmk.hito.be/"
+	apiRoot = "https://lmk.hito.be/"
 )
 
 // var tokens map[string]string
 
 type LetMeKnow struct {
 	dbConn *db.DB
+	client *http.Client
 
 	tokens map[string]string
 }
@@ -32,9 +34,16 @@ func NewLetMeKnow(bot *ircbot.IrcBot) *LetMeKnow {
 	}
 
 	initDB(conn)
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
 	return &LetMeKnow{
 		dbConn: conn,
 		tokens: map[string]string{},
+		client: client,
 	}
 }
 
