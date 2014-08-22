@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	apiRoot = "https://lmk.hito.be/"
+	apiRoot = "https://lmk.hito.be"
 )
 
 // var tokens map[string]string
@@ -23,6 +23,7 @@ const (
 type LetMeKnow struct {
 	dbConn *db.DB
 	client *http.Client
+	bot    *ircbot.IrcBot
 
 	tokens map[string]string
 }
@@ -43,6 +44,7 @@ func NewLetMeKnow(bot *ircbot.IrcBot) *LetMeKnow {
 	return &LetMeKnow{
 		dbConn: conn,
 		tokens: map[string]string{},
+		bot:    bot,
 		client: client,
 	}
 }
@@ -138,34 +140,22 @@ func (l *LetMeKnow) doShowsAdd(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token strin
 		return nil
 	}
 
-	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
-	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "shows/add", title, token)
-	resp, err := l.client.Post(apiURL, "text/html", nil)
+	title := strings.Join(msg.Trailing[2:], " ")
+	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "shows/add", title)
+
+	apiResp, err := l.post(apiURL, token, msg)
 	if err != nil {
-		fmt.Println("error post: ", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		fmt.Println("error decoding : ", err)
 		return err
 	}
 
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
-		fmt.Println("error decode :", err)
+	var addMsg string
+	if err := json.Unmarshal(apiResp.Payload, &addMsg); err != nil {
+		fmt.Println("error decode : ", err)
 		return err
 	}
 
-	if apiResp.Status == "ok" {
-		var addMsg string
-		if err := json.Unmarshal(apiResp.Payload, &addMsg); err != nil {
-			fmt.Println("error decode : ", err)
-			return err
-		}
-		b.Say(msg.Channel(), addMsg)
-	}
+	b.Say(msg.Channel(), addMsg)
+
 	return nil
 }
 
@@ -174,20 +164,10 @@ type showsList []struct {
 }
 
 func (l *LetMeKnow) doShowsList(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
-	url := fmt.Sprintf("%s%s?token=%s", apiRoot, "shows/list", token)
-	resp, err := l.client.Get(url)
-	if err != nil {
-		fmt.Println("error : ", err)
-		return err
-	}
-	defer resp.Body.Close()
+	apiURL := fmt.Sprintf("%s/%s", apiRoot, "shows/list")
 
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-		fmt.Println("list error : ", err)
-		return err
-	}
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
+	apiResp, err := l.get(apiURL, token, msg)
+	if err != nil {
 		return err
 	}
 
@@ -224,22 +204,11 @@ func (l *LetMeKnow) doShowsSearch(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token st
 		return nil
 	}
 
-	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
-	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "shows/search", title, token)
-	resp, err := l.client.Get(apiURL)
+	title := strings.Join(msg.Trailing[2:], " ")
+	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "shows/search", title)
+
+	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
-		fmt.Println("search error get :", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-		fmt.Println("search error decode :", err)
-		return err
-	}
-
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
 		return err
 	}
 
@@ -284,22 +253,11 @@ func (l *LetMeKnow) doShowsSearchEp(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token 
 
 	season := msg.Trailing[2]
 	number := msg.Trailing[3]
-	title := url.QueryEscape(strings.Join(msg.Trailing[4:], " "))
-	apiURL := fmt.Sprintf("%s%s/%s/%s/%s/%s?token=%s", apiRoot, "shows/search", title, "episodes", season, number, token)
-	resp, err := l.client.Get(apiURL)
+	title := strings.Join(msg.Trailing[4:], " ")
+	apiURL := fmt.Sprintf("%s/%s/%s/%s/%s/%s", apiRoot, "shows/search", title, "episodes", season, number)
+
+	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
-		fmt.Println("search error get :", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-		fmt.Println("search error decode :", err)
-		return err
-	}
-
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
 		return err
 	}
 
@@ -329,21 +287,9 @@ func (l *LetMeKnow) doUsersSignUp(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 	username := msg.Trailing[3]
 	password := msg.Trailing[4]
 
-	url := fmt.Sprintf("%s%s?email=%s&username=%s&password=%s", apiRoot, "users/sign_up", mail, username, password)
-	resp, err := l.client.Post(url, "text/html", nil)
-	if err != nil {
-		fmt.Println("sign_up error get :", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-		fmt.Println("sign_up error decode :", err)
-		return err
-	}
-
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
+	apiURL := fmt.Sprintf("%s/%s?email=%s&username=%s&password=%s", apiRoot, "users/sign_up", mail, username, password)
+	apiResp, err := l.post(apiURL, "", msg)
+	if apiResp != nil {
 		return err
 	}
 
@@ -367,22 +313,9 @@ func (l *LetMeKnow) doUsersSignIn(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 	username := msg.Trailing[2]
 	password := msg.Trailing[3]
 
-	url := fmt.Sprintf("%s%s?username=%s&password=%s", apiRoot, "users/sign_in", username, password)
-	fmt.Println("DEBUG :", url)
-	resp, err := l.client.Get(url)
+	apiURL := fmt.Sprintf("%s/%s?username=%s&password=%s", apiRoot, "users/sign_in", username, password)
+	apiResp, err := l.get(apiURL, "", msg)
 	if err != nil {
-		fmt.Println("sign_in error get :", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-		fmt.Println("sign_in error decode :", err)
-		return err
-	}
-
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
 		return err
 	}
 
@@ -417,24 +350,10 @@ func (l *LetMeKnow) doFollowShow(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token str
 		return nil
 	}
 
-	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
-	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "users/follow", title, token)
-
-	resp, err := l.client.Post(apiURL, "text/html", nil)
+	title := strings.Join(msg.Trailing[2:], " ")
+	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "users/follow", title)
+	apiResp, err := l.post(apiURL, token, msg)
 	if err != nil {
-		fmt.Println("error post: ", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		fmt.Println("error decoding : ", err)
-		return err
-	}
-
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
-		fmt.Println("error decode :", err)
 		return err
 	}
 
@@ -456,29 +375,10 @@ func (l *LetMeKnow) doUnfollowShow(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token s
 	}
 
 	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
-	apiURL := fmt.Sprintf("%s%s/%s?token=%s", apiRoot, "users/unfollow", title, token)
+	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "users/follow", title)
 
-	req, err := http.NewRequest("DELETE", apiURL, nil)
+	apiResp, err := l.delete(apiURL, token, msg)
 	if err != nil {
-		fmt.Println("error get: ", err)
-		return err
-	}
-
-	resp, err := l.client.Do(req)
-	if err != nil {
-		fmt.Println("error get: ", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		fmt.Println("error decoding : ", err)
-		return err
-	}
-
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
-		fmt.Println("error decode :", err)
 		return err
 	}
 
@@ -500,20 +400,9 @@ type followed []struct {
 }
 
 func (l *LetMeKnow) doUsersFollowed(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
-	url := fmt.Sprintf("%s%s?token=%s", apiRoot, "users/followed", token)
-	resp, err := l.client.Get(url)
+	apiURL := fmt.Sprintf("%s/%s", apiRoot, "users/followed")
+	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
-		fmt.Println("error : ", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
-		fmt.Println("list error : ", err)
-		return err
-	}
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
 		return err
 	}
 
@@ -537,22 +426,9 @@ func (l *LetMeKnow) doLostPassword(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token s
 	}
 
 	email := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
-	apiURL := fmt.Sprintf("%s%s?email&token=%s", apiRoot, "users/forgot_password", email, token)
-	resp, err := l.client.Get(apiURL)
+	apiURL := fmt.Sprintf("%s/%s?email", apiRoot, "users/forgot_password", email)
+	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
-		fmt.Println("error post: ", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	apiResp := &APIResp{}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		fmt.Println("error decoding : ", err)
-		return err
-	}
-
-	if err := checkApiRespError(apiResp, b, msg); err != nil {
-		fmt.Println("error decode :", err)
 		return err
 	}
 
@@ -565,6 +441,58 @@ func (l *LetMeKnow) doLostPassword(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token s
 		b.Say(msg.Channel(), resp)
 	}
 	return nil
+}
+
+//API helpers
+func (l *LetMeKnow) get(apiURL, token string, msg *ircbot.IrcMsg) (*APIResp, error) {
+	return callAPI(l.client, apiURL, "GET", token, l.bot, msg)
+}
+
+func (l *LetMeKnow) post(apiURL, token string, msg *ircbot.IrcMsg) (*APIResp, error) {
+	return callAPI(l.client, apiURL, "POST", token, l.bot, msg)
+}
+
+func (l *LetMeKnow) delete(apiURL, token string, msg *ircbot.IrcMsg) (*APIResp, error) {
+	return callAPI(l.client, apiURL, "DELETE", token, l.bot, msg)
+}
+
+func callAPI(client *http.Client, apiURL, method, token string, b *ircbot.IrcBot, m *ircbot.IrcMsg) (*APIResp, error) {
+	u, err := url.Parse(apiURL)
+	if err != nil {
+		fmt.Println("error parse url : ", err)
+		return nil, err
+	}
+	if token != "" {
+		v := u.Query()
+		v.Add("token", token)
+		u.RawQuery = v.Encode()
+	}
+
+	req, err := http.NewRequest(method, u.String(), nil)
+	if err != nil {
+		fmt.Println("error create request : ", err)
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("error do request : ", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	apiResp := &APIResp{}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		fmt.Println("error decoding api response: ", err)
+		return nil, err
+	}
+
+	if err := checkApiRespError(apiResp, b, m); err != nil {
+		fmt.Println("api respond with error :", err)
+		return nil, err
+	}
+
+	return apiResp, nil
 }
 
 func checkApiRespError(apiResp *APIResp, b *ircbot.IrcBot, m *ircbot.IrcMsg) error {
