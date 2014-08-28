@@ -1,6 +1,7 @@
 package zbibot
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -141,9 +142,14 @@ func (l *LetMeKnow) doShowsAdd(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token strin
 	}
 
 	title := strings.Join(msg.Trailing[2:], " ")
-	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "shows/add", title)
+	apiURL := fmt.Sprintf("%s/%s", apiRoot, "shows")
 
-	apiResp, err := l.post(apiURL, token, msg)
+	body := struct {
+		Title string `json:"title"`
+	}{
+		title,
+	}
+	apiResp, err := l.post(apiURL, body, token, msg)
 	if err != nil {
 		return err
 	}
@@ -164,7 +170,7 @@ type showsList []struct {
 }
 
 func (l *LetMeKnow) doShowsList(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
-	apiURL := fmt.Sprintf("%s/%s", apiRoot, "shows/list")
+	apiURL := fmt.Sprintf("%s/%s", apiRoot, "shows")
 
 	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
@@ -205,7 +211,7 @@ func (l *LetMeKnow) doShowsSearch(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token st
 	}
 
 	title := strings.Join(msg.Trailing[2:], " ")
-	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "shows/search", title)
+	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "shows", title)
 
 	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
@@ -254,7 +260,7 @@ func (l *LetMeKnow) doShowsSearchEp(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token 
 	season := msg.Trailing[2]
 	number := msg.Trailing[3]
 	title := strings.Join(msg.Trailing[4:], " ")
-	apiURL := fmt.Sprintf("%s/%s/%s/%s/%s/%s", apiRoot, "shows/search", title, "episodes", season, number)
+	apiURL := fmt.Sprintf("%s/%s/%s/%s/%s/%s", apiRoot, "shows", title, "episodes", season, number)
 
 	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
@@ -287,8 +293,18 @@ func (l *LetMeKnow) doUsersSignUp(b *ircbot.IrcBot, msg *ircbot.IrcMsg) error {
 	username := msg.Trailing[3]
 	password := msg.Trailing[4]
 
-	apiURL := fmt.Sprintf("%s/%s?email=%s&username=%s&password=%s", apiRoot, "users/sign_up", mail, username, password)
-	apiResp, err := l.post(apiURL, "", msg)
+	body := struct {
+		Username string `json:"username"`
+		Pass     string `json:"password"`
+		Email    string `json:"email"`
+	}{
+		username,
+		password,
+		mail,
+	}
+
+	apiURL := fmt.Sprintf("%s/%s", apiRoot, "users/sign_up")
+	apiResp, err := l.post(apiURL, body, "", msg)
 	if apiResp != nil {
 		return err
 	}
@@ -351,8 +367,15 @@ func (l *LetMeKnow) doFollowShow(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token str
 	}
 
 	title := strings.Join(msg.Trailing[2:], " ")
-	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "users/follow", title)
-	apiResp, err := l.post(apiURL, token, msg)
+
+	body := struct {
+		Title string `json:"title"`
+	}{
+		title,
+	}
+
+	apiURL := fmt.Sprintf("%s/%s", apiRoot, "users/follows")
+	apiResp, err := l.post(apiURL, body, token, msg)
 	if err != nil {
 		return err
 	}
@@ -375,7 +398,7 @@ func (l *LetMeKnow) doUnfollowShow(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token s
 	}
 
 	title := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
-	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "users/follow", title)
+	apiURL := fmt.Sprintf("%s/%s/%s/%s", apiRoot, "users", "follows", title)
 
 	apiResp, err := l.delete(apiURL, token, msg)
 	if err != nil {
@@ -400,7 +423,7 @@ type followed []struct {
 }
 
 func (l *LetMeKnow) doUsersFollowed(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
-	apiURL := fmt.Sprintf("%s/%s", apiRoot, "users/followed")
+	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "users", "follows")
 	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
 		return err
@@ -426,7 +449,7 @@ func (l *LetMeKnow) doLostPassword(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token s
 	}
 
 	email := url.QueryEscape(strings.Join(msg.Trailing[2:], " "))
-	apiURL := fmt.Sprintf("%s/%s?email", apiRoot, "users/forgot_password", email)
+	apiURL := fmt.Sprintf("%s/%s/%s?email=%s", apiRoot, "users", "forgot_password", email)
 	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
 		return err
@@ -445,18 +468,22 @@ func (l *LetMeKnow) doLostPassword(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token s
 
 //API helpers
 func (l *LetMeKnow) get(apiURL, token string, msg *ircbot.IrcMsg) (*APIResp, error) {
-	return callAPI(l.client, apiURL, "GET", token, l.bot, msg)
+	return callAPI(l.client, apiURL, nil, "GET", token, l.bot, msg)
 }
 
-func (l *LetMeKnow) post(apiURL, token string, msg *ircbot.IrcMsg) (*APIResp, error) {
-	return callAPI(l.client, apiURL, "POST", token, l.bot, msg)
+func (l *LetMeKnow) post(apiURL string, body interface{}, token string, msg *ircbot.IrcMsg) (*APIResp, error) {
+	w := &bytes.Buffer{}
+	if err := json.NewEncoder(w).Encode(body); err != nil {
+		return nil, err
+	}
+	return callAPI(l.client, apiURL, w, "POST", token, l.bot, msg)
 }
 
 func (l *LetMeKnow) delete(apiURL, token string, msg *ircbot.IrcMsg) (*APIResp, error) {
-	return callAPI(l.client, apiURL, "DELETE", token, l.bot, msg)
+	return callAPI(l.client, apiURL, nil, "DELETE", token, l.bot, msg)
 }
 
-func callAPI(client *http.Client, apiURL, method, token string, b *ircbot.IrcBot, m *ircbot.IrcMsg) (*APIResp, error) {
+func callAPI(client *http.Client, apiURL string, body io.Reader, method, token string, b *ircbot.IrcBot, m *ircbot.IrcMsg) (*APIResp, error) {
 	u, err := url.Parse(apiURL)
 	if err != nil {
 		fmt.Println("error parse url : ", err)
@@ -468,11 +495,12 @@ func callAPI(client *http.Client, apiURL, method, token string, b *ircbot.IrcBot
 		u.RawQuery = v.Encode()
 	}
 
-	req, err := http.NewRequest(method, u.String(), nil)
+	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
 		fmt.Println("error create request : ", err)
 		return nil, err
 	}
+	fmt.Printf("req : %+v\n", req)
 
 	resp, err := client.Do(req)
 	if err != nil {
