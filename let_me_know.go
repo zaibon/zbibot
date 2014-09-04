@@ -72,7 +72,7 @@ func (l *LetMeKnow) Usage() string {
 func (l *LetMeKnow) Do(b *ircbot.IrcBot, msg *ircbot.IrcMsg) {
 	if len(msg.Trailing) < 2 {
 		b.Say(msg.Channel(), "shows cmd:")
-		b.Say(msg.Channel(), "list | search :title | ep :season :episode :title | add :title | follow :title | unfollow :title | followed ")
+		b.Say(msg.Channel(), "list | search :title | ep :season :episode :title | add :title | follow :title | unfollow :title | followed ?:username")
 		b.Say(msg.Channel(), "users cmd:")
 		b.Say(msg.Channel(), "signup :mail :username :password | signin :username :password | lost :email")
 
@@ -367,14 +367,13 @@ func (l *LetMeKnow) doFollowShow(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token str
 	}
 
 	title := strings.Join(msg.Trailing[2:], " ")
-
 	body := struct {
 		Title string `json:"title"`
 	}{
 		title,
 	}
 
-	apiURL := fmt.Sprintf("%s/%s", apiRoot, "users/follows")
+	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "users", "follows")
 	apiResp, err := l.post(apiURL, body, token, msg)
 	if err != nil {
 		return err
@@ -423,7 +422,15 @@ type followed []struct {
 }
 
 func (l *LetMeKnow) doUsersFollowed(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token string) error {
-	apiURL := fmt.Sprintf("%s/%s/%s", apiRoot, "users", "follows")
+	apiURL := ""
+
+	if len(msg.Trailing) > 2 {
+		username := msg.Trailing[2]
+		apiURL = fmt.Sprintf("%s/%s/%s/%s", apiRoot, "users", "follows", username)
+	} else {
+		apiURL = fmt.Sprintf("%s/%s/%s", apiRoot, "users", "follows")
+	}
+
 	apiResp, err := l.get(apiURL, token, msg)
 	if err != nil {
 		return err
@@ -432,7 +439,7 @@ func (l *LetMeKnow) doUsersFollowed(b *ircbot.IrcBot, msg *ircbot.IrcMsg, token 
 	if apiResp.Status == "ok" {
 		shows := showsList{}
 		if err := json.Unmarshal(apiResp.Payload, &shows); err != nil {
-			fmt.Println("list error :", err)
+			fmt.Println("followed, decode error :", err)
 			return err
 		}
 		for _, title := range shows {
