@@ -1,77 +1,31 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/Zaibon/ircbot"
 	"github.com/Zaibon/ircbot/actions"
+	"github.com/jessevdk/go-flags"
 )
 
-//needed for the flag "channel"
-type channels []string
-
-func (c *channels) String() string {
-	return fmt.Sprintf("%s", *c)
-}
-
-func (c *channels) Set(value string) error {
-	*c = append(*c, value)
-	return nil
-}
-
-var (
-	flagServer   string
-	flagPort     string
-	flagSsl      bool
-	flagChannels channels
-
-	flagNick     string
-	flagPassword string
-
-	flagWebEnable bool
-	flagWebPort   string
-
-	flagDBPath string
-)
-
-func init() {
-	flag.StringVar(&flagServer, "server", "irc.freenode.net", "ip adresse of the server you want to connect to")
-	flag.StringVar(&flagServer, "s", "irc.freenode.net", "ip adresse of the server you want to connect to")
-
-	flag.StringVar(&flagPort, "port", "6667", "port")
-	flag.StringVar(&flagPort, "p", "6667", "port")
-
-	flag.BoolVar(&flagSsl, "ssl", false, "true|false")
-
-	flag.StringVar(&flagNick, "nick", "ZbiBot", "nickname")
-	flag.StringVar(&flagNick, "n", "ZbiBot", "nickname")
-
-	flag.StringVar(&flagPassword, "password", "", "password")
-
-	flag.BoolVar(&flagWebEnable, "web", false, "enable or not the web interface true|false")
-	flag.StringVar(&flagWebPort, "wport", "3000", "port on wich to bind web interface")
-
-	flag.StringVar(&flagDBPath, "db", "irc.db", "path to the sqlite3 database")
+var opts struct {
+	Server   string   `short:"s" long:"server" description:"ip adresse of the server you want to connect to" default:"irc.freenode.net"`
+	Port     uint     `short:"p" long:"port" description:"port to connect to" default:"6667"`
+	Channels []string `short:"c" long:"channels" description:"channels the bot has to joined" required:"true"`
+	SSL      int      `long:"ssl" description:"enable ssl on not" default:"false"`
+	Nick     string   `short:"n" long:"nick" description:"nickname" default:"Zbibot"`
+	Password string   `long:"pass" long:"password" description:"password"`
+	DBPath   string   `long:"db" long:"database" description:"path to the sqlite database file" default:"irc.db"`
 }
 
 func main() {
-	flag.Var(&flagChannels, "c", "channels")
-
-	flag.Parse()
-
-	if flagSsl {
-		flagPort = "6697"
-	}
-
-	ch := channels{}
-	if flag.NFlag() != 0 {
-		for i := 0; i < len(flagChannels); i++ {
-			ch = append(ch, flagChannels[i])
-		}
+	_, err := flags.Parse(&opts)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 	//create new bot
-	b := ircbot.NewIrcBot(flagNick, flagNick, flagPassword, flagServer, flagPort, ch, flagDBPath)
+	b := ircbot.NewIrcBot(opts.Nick, opts.Nick, opts.Password, opts.Server, opts.Port, opts.Channels, opts.DBPath)
 
 	b.AddInternAction(&actions.Greet{})
 	b.AddInternAction(&actions.TitleExtract{})
