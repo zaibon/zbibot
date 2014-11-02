@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Zaibon/ircbot"
-	db "github.com/Zaibon/ircbot/database"
+	"github.com/zaibon/ircbot"
+	db "github.com/zaibon/ircbot/database"
 )
 
 const (

@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/Zaibon/zbibot"
+	"github.com/zaibon/zbibot"
 
-	"github.com/Zaibon/ircbot"
-	"github.com/Zaibon/ircbot/actions"
 	"github.com/jessevdk/go-flags"
+	"github.com/zaibon/ircbot"
+	"github.com/zaibon/ircbot/actions"
 )
 
 var opts struct {
@@ -30,7 +30,7 @@ func main() {
 	b := ircbot.NewIrcBot(opts.Nick, opts.Nick, opts.Password, opts.Server, opts.Port, opts.Channels, opts.DBPath)
 
 	b.AddInternAction(&actions.Greet{})
-	b.AddInternAction(&actions.TitleExtract{})
+	b.AddInternAction(actions.NewTitleExtract())
 	b.AddInternAction(actions.NewLogger(b))
 	b.AddInternAction(actions.NewURLLog(b))
 
