@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/zaibon/zbibot"
-
 	"github.com/jessevdk/go-flags"
 	"github.com/zaibon/ircbot"
 	"github.com/zaibon/ircbot/actions"
