@@ -36,7 +36,6 @@ func main() {
 
 	//command fire by users
 	b.AddUserAction(&actions.Help{})
-	b.AddUserAction(zbibot.NewLetMeKnow(b))
 	b.AddUserAction(actions.NewURL(b))
 
 	//connectin to server, listen and serve
