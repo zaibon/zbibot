@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/Zaibon/ircbot"
-	"github.com/Zaibon/ircbot/actions"
+	"github.com/zaibon/ircbot"
+	"github.com/zaibon/ircbot/actions"
 )
 
 //needed for the flag "channel"
