@@ -8,7 +8,7 @@ import (
 	"github.com/zaibon/ircbot/actions"
 )
 
-//needed for the flag "channel"
+// needed for the flag "channel"
 type channels []string
 
 func (c *channels) String() string {
@@ -22,7 +22,7 @@ func (c *channels) Set(value string) error {
 
 var (
 	flagServer   string
-	flagPort     string
+	flagPort     uint
 	flagSsl      bool
 	flagChannels channels
 
@@ -39,8 +39,8 @@ func init() {
 	flag.StringVar(&flagServer, "server", "irc.freenode.net", "ip adresse of the server you want to connect to")
 	flag.StringVar(&flagServer, "s", "irc.freenode.net", "ip adresse of the server you want to connect to")
 
-	flag.StringVar(&flagPort, "port", "6667", "port")
-	flag.StringVar(&flagPort, "p", "6667", "port")
+	flag.UintVar(&flagPort, "port", 6667, "port")
+	flag.UintVar(&flagPort, "p", 6667, "port")
 
 	flag.BoolVar(&flagSsl, "ssl", false, "true|false")
 
@@ -61,7 +61,7 @@ func main() {
 	flag.Parse()
 
 	if flagSsl {
-		flagPort = "6697"
+		flagPort = 6697
 	}
 
 	ch := channels{}
