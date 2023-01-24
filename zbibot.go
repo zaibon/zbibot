@@ -14,8 +14,8 @@ var opts struct {
 	Channels []string `short:"c" long:"channels" description:"channels the bot has to joined" required:"true"`
 	SSL      int      `long:"ssl" description:"enable ssl on not" default:"false"`
 	Nick     string   `short:"n" long:"nick" description:"nickname" default:"Zbibot"`
-	Password string   `long:"pass" long:"password" description:"password"`
-	DBPath   string   `long:"db" long:"database" description:"path to the sqlite database file" default:"irc.db"`
+	Password string   `short:"pass" long:"password" description:"password"`
+	DBPath   string   `short:"db" long:"database" description:"path to the sqlite database file" default:"irc.db"`
 }
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 		return
 	}
 	//create new bot
-	b := ircbot.NewIrcBot(opts.Nick, opts.Nick, opts.Password, opts.Server, opts.Port, opts.Channels, opts.DBPath)
+	b := ircbot.NewIrcBot(opts.Nick, opts.Nick, opts.Server, opts.Port, opts.Channels, opts.DBPath)
 
 	b.AddInternAction(&actions.Greet{})
 	b.AddInternAction(actions.NewTitleExtract())
@@ -37,7 +37,7 @@ func main() {
 	b.AddUserAction(actions.NewURL(b))
 
 	//connectin to server, listen and serve
-	b.Connect()
+	b.Connect(opts.Password)
 
 	// //TODO handle signal system to throw something in b.Exit
 	<-b.Exit

@@ -71,7 +71,7 @@ func main() {
 		}
 	}
 	//create new bot
-	b := ircbot.NewIrcBot(flagNick, flagNick, flagPassword, flagServer, flagPort, ch, flagDBPath)
+	b := ircbot.NewIrcBot(flagNick, flagNick, flagServer, flagPort, ch, flagDBPath)
 
 	b.AddInternAction(&actions.Greet{})
 	b.AddInternAction(&actions.TitleExtract{})
@@ -81,7 +81,7 @@ func main() {
 	b.AddUserAction(&actions.Help{})
 
 	//connectin to server, listen and serve
-	b.Connect()
+	b.Connect(flagPassword)
 
 	// //TODO handle signal system to throw something in b.Exit
 	<-b.Exit
