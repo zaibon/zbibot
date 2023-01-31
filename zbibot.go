@@ -26,9 +26,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger.Info("start bot")
 	sugar := logger.Sugar()
-	sugar.Info("sugaaaaa")
+
+	sugar.Info("Hello from zap logger")
 
 	if _, err := flags.Parse(&opts); err != nil {
 		fmt.Println(err)
