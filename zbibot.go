@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/zaibon/ircbot"
 	"github.com/zaibon/ircbot/actions"
+	"go.uber.org/zap"
 )
 
 var opts struct {
@@ -19,8 +21,16 @@ var opts struct {
 }
 
 func main() {
-	_, err := flags.Parse(&opts)
+	logger, err := zap.NewProduction()
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	logger.Info("start bot")
+	sugar := logger.Sugar()
+	sugar.Info("sugaaaaa")
+
+	if _, err := flags.Parse(&opts); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -41,6 +51,6 @@ func main() {
 
 	// //TODO handle signal system to throw something in b.Exit
 	<-b.Exit
-	//and then disconenct
+	//and then disconnect
 	b.Disconnect()
 }
